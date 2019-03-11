@@ -129,6 +129,7 @@ function WaitForMultipleObjects(const Objects: array of TJclDispatcherObject;
   WaitAll: Boolean; TimeOut: Cardinal): Cardinal;
 function WaitAlertableForMultipleObjects(const Objects: array of TJclDispatcherObject;
   WaitAll: Boolean; TimeOut: Cardinal): Cardinal;
+{$ENDIF MSWINDOWS}
 
 type
   TJclCriticalSection = class(TObject)
@@ -142,6 +143,7 @@ type
     procedure Leave;
   end;
 
+{$IFDEF MSWINDOWS}
   TJclCriticalSectionEx = class(TJclCriticalSection)
   private
     FSpinCount: Cardinal;
@@ -847,18 +849,32 @@ begin
     Handles[I] := Objects[I].Handle;
   Result := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.WaitForMultipleObjectsEx(Count, @Handles[0], WaitAll, TimeOut, True);
 end;
+{$ENDIF MSWINDOWS}
+
 
 //=== { TJclCriticalSection } ================================================
 
 constructor TJclCriticalSection.Create;
 begin
   inherited Create;
+{$IF Defined(MSWINDOWS)}
   {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.InitializeCriticalSection(FCriticalSection);
+{$ELSEIF Defined(FPC)}
+  InitCriticalSection(FCriticalSection);
+{$ELSE}
+  {$Message Error 'Not implemented'}
+{$ENDIF}
 end;
 
 destructor TJclCriticalSection.Destroy;
 begin
+{$IF Defined(MSWINDOWS)}
   {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.DeleteCriticalSection(FCriticalSection);
+{$ELSEIF Defined(FPC)}
+  DoneCriticalSection(FCriticalSection);
+{$ELSE}
+  {$Message Error 'Not implemented'}
+{$ENDIF}
   inherited Destroy;
 end;
 
@@ -877,14 +893,15 @@ end;
 
 procedure TJclCriticalSection.Enter;
 begin
-  {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.EnterCriticalSection(FCriticalSection);
+  {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}{$IFDEF MSWINDOWS}Windows.{$ENDIF}EnterCriticalSection(FCriticalSection);
 end;
 
 procedure TJclCriticalSection.Leave;
 begin
-  {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.LeaveCriticalSection(FCriticalSection);
+  {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}{$IFDEF MSWINDOWS}Windows.{$ENDIF}LeaveCriticalSection(FCriticalSection);
 end;
 
+{$IFDEF MSWINDOWS}
 //== { TJclCriticalSectionEx } ===============================================
 
 const

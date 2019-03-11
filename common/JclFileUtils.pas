@@ -224,9 +224,9 @@ function DiskInDrive(Drive: Char): Boolean;
 function DirectoryExists(const Name: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): Boolean;
 function FileCreateTemp(var Prefix: string): THandle;
 {$ENDIF MSWINDOWS}
-{$IFDEF LINUX}
+{$IFDEF POSIX}
 function FileCreateTemp(var Prefix: string): THandle;
-{$ENDIF LINUX}
+{$ENDIF POSIX}
 {$IFDEF MSWINDOWS}
 function FileBackup(const FileName: string; Move: Boolean = False): Boolean;
 function FileCopy(const ExistingFileName, NewFileName: string; ReplaceExisting: Boolean = False): Boolean;
