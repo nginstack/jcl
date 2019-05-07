@@ -1498,9 +1498,6 @@
 {------------------------------------------------------------------------------}
 
 {$IFDEF FPC}
-  {$IFDEF  VER1_0}
-     Please use FPC 2.0 or higher to compile this.
-  {$ELSE}
     {$DEFINE SUPPORTS_OUTPARAMS}
     {$DEFINE SUPPORTS_WIDECHAR}
     {$DEFINE SUPPORTS_WIDESTRING}
@@ -1560,7 +1557,6 @@
       {$UNDEF SUPPORTS_IMPLEMENTS}
     {$endif}
     {$UNDEF SUPPORTS_UNSAFE_WARNINGS}
-  {$ENDIF}
 {$ENDIF FPC}
 
 {$IFDEF CLR}

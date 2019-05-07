@@ -93,12 +93,7 @@ type
     constructor Create(AHandle: THandle);
     function Read(var Buffer; Count: Longint): Longint; override;
     function Write(const Buffer; Count: Longint): Longint; override;
-    {$IFDEF MSWINDOWS}
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
-    {$ENDIF MSWINDOWS}
-    {$IFDEF HAS_UNIT_LIBC}
-    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
-    {$ENDIF HAS_UNIT_LIBC}
     property Handle: THandle read FHandle;
   end;
 
@@ -794,30 +789,32 @@ end;
 
 function TJclHandleStream.Read(var Buffer; Count: Longint): Longint;
 begin
-  Result := 0;
-  {$IFDEF MSWINDOWS}
+{$IF Defined(MSWINDOWS)}
   if (Count <= 0) or not ReadFile(Handle, Buffer, DWORD(Count), DWORD(Result), nil) then
     Result := 0;
-  {$ENDIF MSWINDOWS}
-  {$IFDEF HAS_UNIT_LIBC}
+{$ELSEIF Defined(HAS_UNIT_LIBC)}
   Result := __read(Handle, Buffer, Count);
-  {$ENDIF HAS_UNIT_LIBC}
+{$ELSEIF Defined(FPC)}
+  Result := FileRead(Handle, Buffer, Count);
+  If Result = -1 then Result := 0;
+{$ENDIF}
 end;
 
 function TJclHandleStream.Write(const Buffer; Count: Longint): Longint;
 begin
-  Result := 0;
-  {$IFDEF MSWINDOWS}
+{$IF Defined(MSWINDOWS)}
   if (Count <= 0) or not WriteFile(Handle, Buffer, DWORD(Count), DWORD(Result), nil) then
     Result := 0;
-  {$ENDIF MSWINDOWS}
-  {$IFDEF HAS_UNIT_LIBC}
+{$ELSEIF Defined(HAS_UNIT_LIBC)}
   Result := __write(Handle, Buffer, Count);
-  {$ENDIF HAS_UNIT_LIBC}
+{$ELSEIF Defined(FPC)}
+  Result := FileWrite(Handle, Buffer, Count);
+  if Result = -1 then Result := 0;
+{$ENDIF}
 end;
 
-{$IFDEF MSWINDOWS}
 function TJclHandleStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
+{$IF Defined(MSWINDOWS)}
 const
   INVALID_SET_FILE_POINTER = -1;
 type
@@ -838,71 +835,102 @@ begin
     Result := -1
   else
     Result := Offs.Offset64;
-end;
-{$ENDIF MSWINDOWS}
-{$IFDEF HAS_UNIT_LIBC}
-function TJclHandleStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
+{$ELSEIF Defined(HAS_UNIT_LIBC)}
 const
   SeekOrigins: array [TSeekOrigin] of Cardinal = ( SEEK_SET {soBeginning}, SEEK_CUR {soCurrent}, SEEK_END {soEnd} );
 begin
   Result := lseek(Handle, Offset, SeekOrigins[Origin]);
+{$ELSEIF Defined(FPC)}
+begin
+  Result := FileSeek(Handle, Offset, Ord(Origin));
+{$ENDIF}
 end;
-{$ENDIF HAS_UNIT_LIBC}
 
 procedure TJclHandleStream.SetSize(const NewSize: Int64);
 begin
+{$IF Defined(MSWINDOWS)}
   Seek(NewSize, soBeginning);
-  {$IFDEF MSWINDOWS}
   if not SetEndOfFile(Handle) then
     RaiseLastOSError;
-  {$ENDIF MSWINDOWS}
-  {$IFDEF HAS_UNIT_LIBC}
+{$ELSEIF Defined(HAS_UNIT_LIBC)}
+  Seek(NewSize, soBeginning);
   if ftruncate(Handle, Position) = -1 then
     raise EJclStreamError.CreateRes(@RsStreamsSetSizeError);
-  {$ENDIF HAS_UNIT_LIBC}
+{$ELSEIF Defined(FPC)}
+  FileTruncate(Handle, NewSize);
+{$ENDIF}
 end;
 
 //=== { TJclFileStream } =====================================================
 
 constructor TJclFileStream.Create(const FileName: TFileName; Mode: Word; Rights: Cardinal);
+{$IF Defined(MSWINDOWS)}
 var
   H: THandle;
-{$IFDEF LINUX}
-const
-  INVALID_HANDLE_VALUE = -1;
-{$ENDIF LINUX}
 begin
   if Mode = fmCreate then
   begin
-    {$IFDEF HAS_UNIT_LIBC}
-    H := open(PChar(FileName), O_CREAT or O_RDWR, Rights);
-    {$ENDIF HAS_UNIT_LIBC}
-    {$IFDEF MSWINDOWS}
     H := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE,
       0, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
-    {$ENDIF MSWINDOWS}
     inherited Create(H);
     if Handle = INVALID_HANDLE_VALUE then
       raise EJclStreamError.CreateResFmt(@RsStreamsCreateError, [FileName]);
-  end
-  else
+  end else
   begin
     H := THandle(FileOpen(FileName, Mode));
     inherited Create(H);
     if Handle = INVALID_HANDLE_VALUE then
       raise EJclStreamError.CreateResFmt(@RsStreamsOpenError, [FileName]);
   end;
+{$ELSEIF Defined(HAS_UNIT_LIBC)}
+var
+  H: THandle;
+const
+  INVALID_HANDLE_VALUE = -1;
+begin
+  if Mode = fmCreate then
+  begin
+    H := open(PChar(FileName), O_CREAT or O_RDWR, Rights);
+    inherited Create(H);
+    if Handle = INVALID_HANDLE_VALUE then
+      raise EJclStreamError.CreateResFmt(@RsStreamsCreateError, [FileName]);
+  end else
+  begin
+    H := THandle(FileOpen(FileName, Mode));
+    inherited Create(H);
+    if Handle = INVALID_HANDLE_VALUE then
+      raise EJclStreamError.CreateResFmt(@RsStreamsOpenError, [FileName]);
+  end;
+{$ELSEIF Defined(FPC)}
+var
+  H: THandle;
+begin
+  if Mode = fmCreate then
+  begin
+    H := FileCreate(FileName, Mode, Rights);
+    inherited Create(H);
+    if Handle = feInvalidHandle then
+      raise EJclStreamError.CreateResFmt(@RsStreamsCreateError, [FileName]);
+  end else
+  begin
+    H := FileOpen(FileName, Mode);
+    inherited Create(H);
+    if Handle = feInvalidHandle then
+      raise EJclStreamError.CreateResFmt(@RsStreamsOpenError, [FileName]);
+  end;
+{$ENDIF}
 end;
 
 destructor TJclFileStream.Destroy;
 begin
-  {$IFDEF MSWINDOWS}
+{$IF Defined(MSWINDOWS)}
   if Handle <> INVALID_HANDLE_VALUE then
     CloseHandle(Handle);
-  {$ENDIF MSWINDOWS}
-  {$IFDEF HAS_UNIT_LIBC}
+{$ELSEIF Defined(HAS_UNIT_LIBC)}
   __close(Handle);
-  {$ENDIF HAS_UNIT_LIBC}
+{$ELSEIF Defined(FPC)}
+  FileClose(Handle);
+{$ENDIF}
   inherited Destroy;
 end;
 

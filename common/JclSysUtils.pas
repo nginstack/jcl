@@ -1762,6 +1762,7 @@ end;
 
 function TJclReferenceMemoryStream.Write(const Buffer; Count: Longint): Longint;
 begin
+  Result := -1;
   raise EJclError.CreateRes(@RsCannotWriteRefStream);
 end;
 
