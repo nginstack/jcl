@@ -398,7 +398,7 @@ const
 {$IFDEF FPC}
 // FPC emits a lot of warning because the first parameter of its internal
 // GetMem is a var parameter, which is not initialized before the call to GetMem
-procedure GetMem(out P; Size: Longint);
+//procedure GetMem(out P; Size: Longint);
 {$ENDIF FPC}
 
 {$IFDEF UNITVERSIONING}
@@ -622,11 +622,11 @@ end;
 {$IFDEF FPC}
 // FPC emits a lot of warning because the first parameter of its internal
 // GetMem is a var parameter, which is not initialized before the call to GetMem
-procedure GetMem(out P; Size: Longint);
-begin
-  Pointer(P) := nil;
-  GetMem(Pointer(P), Size);
-end;
+//procedure GetMem(out P; Size: Longint);
+//begin
+//  Pointer(P) := nil;
+//  GetMem(Pointer(P), Size);
+//end;
 {$ENDIF FPC}
 
 initialization
