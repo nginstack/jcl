@@ -2707,7 +2707,7 @@ end;
 {$ENDIF ~UNIX}
 
 function PathGetTempPath: string;
-{$IFDEF MSWINDOWS}
+{$IF Defined(MSWINDOWS)}
 var
   BufSize: Cardinal;
 begin
@@ -2716,13 +2716,13 @@ begin
   { TODO : Check length (-1 or not) }
   {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetTempPath(BufSize, PChar(Result));
   StrResetLength(Result);
-end;
-{$ENDIF MSWINDOWS}
-{$IFDEF UNIX}
+{$ELSEIF Defined(FPC)}
 begin
-  Result := GetEnvironmentVariable('TMPDIR');
+  Result := SysUtils.GetTempDir;
+{$ELSE}
+  {$MESSAGE Error 'Platform to-do'}
+{$ENDIF}
 end;
-{$ENDIF UNIX}
 
 function PathIsAbsolute(const Path: string): Boolean;
 {$IFDEF MSWINDOWS}
@@ -3441,7 +3441,7 @@ begin
   end;
 end;
 {$ENDIF MSWINDOWS}
-{$IFDEF LINUX}
+{$IFDEF POSIX}
 Const
   clib = 'c';
 
@@ -3470,7 +3470,7 @@ begin
   Result := mkstemp(PChar(Template));
   Prefix := Template;
 end;
-{$ENDIF LINUX}
+{$ENDIF POSIX}
 
 {$IFDEF MSWINDOWS}
 function FileBackup(const FileName: string; Move: Boolean = False): Boolean;
@@ -3547,14 +3547,12 @@ begin
     Result := SHDeleteFiles(0, FileName, [doSilent, doAllowUndo, doFilesOnly])
   else
     Result := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.DeleteFile(PChar(FileName));
-end;
-{$ENDIF MSWINDOWS}
-{$IFDEF UNIX}
+{$ELSE}
   { TODO : implement MoveToRecycleBin for appropriate Desktops (e.g. KDE) }
 begin
   Result := SysUtils.DeleteFile(FileName);
+{$ENDIF}
 end;
-{$ENDIF UNIX}
 
 function FileExists(const FileName: string): Boolean;
 {$IFDEF MSWINDOWS}
@@ -3720,7 +3718,7 @@ begin
     end;
   end;
 end;
-{$ENDIF ~MSWINDOWS}
+{$ENDIF MSWINDOWS}
 {$IFDEF HAS_UNIT_LIBC}
 function FileGetGroupName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
 var
@@ -3826,7 +3824,7 @@ external kernel32 name 'GetTempFileNameA';
 {$ENDIF MSWINDOWS}
 
 function FileGetTempName(const Prefix: string): string;
-{$IFDEF MSWINDOWS}
+{$IF Defined(MSWINDOWS)}
 var
   TempPath, TempFile: string;
   R: Cardinal;
@@ -3843,12 +3841,16 @@ begin
       Result := TempFile;
     end;
   end;
-end;
-{$ELSE}
+{$ELSEIF Defined(FPC)}
 begin
-  SysUtils.GetTempFileName(PathGetTempPath, Prefix);
-end;
+  if Prefix <> '' then
+    Result := SysUtils.GetTempFileName(PathGetTempPath, Prefix)
+  else
+    Result := SysUtils.GetTempFileName;
+{$ELSE}
+  {$MESSAGE Error 'platform to-do'}
 {$ENDIF}
+end;
 
 {$IFDEF MSWINDOWS}
 function FileGetTypeName(const FileName: string): string;

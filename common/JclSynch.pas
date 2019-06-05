@@ -862,7 +862,7 @@ begin
 {$ELSEIF Defined(FPC)}
   InitCriticalSection(FCriticalSection);
 {$ELSE}
-  {$Message Error 'Not implemented'}
+  {$Message Error 'Platform to-do'}
 {$ENDIF}
 end;
 
@@ -873,7 +873,7 @@ begin
 {$ELSEIF Defined(FPC)}
   DoneCriticalSection(FCriticalSection);
 {$ELSE}
-  {$Message Error 'Not implemented'}
+  {$Message Error 'Platform to-do'}
 {$ENDIF}
   inherited Destroy;
 end;
