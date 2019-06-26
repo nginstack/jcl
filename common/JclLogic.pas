@@ -578,18 +578,30 @@ end;
 {$ENDIF CPU64}
 
 function ClearBit(const Value: Byte; const Bit: TBitRange): Byte;
+{$IF Defined(CPUX86) and Defined(MSWINDOWS)}
 asm
-  // 32 --> AL Value
-  //        DL Bit
-  //    <-- AL Result
-  // 64 --> CL Value
-  //        DL Bit
-  //    <-- AL Result
+//    --> AL Value
+//        DL Bit
+//    <-- AL Result
   AND    EDX, BitsPerByte - 1   // modulo BitsPerByte
-  {$IFDEF CPU64}
-  MOVZX  EAX, CL
-  {$ENDIF CPU64}
   BTR    EAX, EDX
+{$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
+asm
+//    --> CL Value
+//        DL Bit
+//    <-- AL Result
+  AND    EDX, BitsPerByte - 1   // modulo BitsPerByte
+  MOVZX  EAX, CL
+  BTR    EAX, EDX
+{$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+asm
+//    --> DIL Value
+//        SIL Bit
+//    <-- AL Result
+  AND    ESI, BitsPerByte - 1   // modulo BitsPerByte
+  MOVZX  EAX, DIL
+  BTR    EAX, ESI
+{$ENDIF}
 end;
 
 function ClearBit(const Value: Shortint; const Bit: TBitRange): Shortint;
@@ -1222,18 +1234,30 @@ asm
 end;
 
 function SetBit(const Value: Byte; const Bit: TBitRange): Byte;
+{$IF Defined(CPUX86) and Defined(MSWINDOWS)}
 asm
-  // 32 --> AL Value
-  //        DL Bit
-  //    <-- AL Result
-  // 64 --> CL Value
-  //        DL Bit
-  //    <-- AL Result
+//    --> AL Value
+//        DL Bit
+//    <-- AL Result
   AND    EDX, BitsPerByte - 1   // modulo BitsPerByte
-  {$IFDEF CPU64}
-  MOVZX  EAX, CL
-  {$ENDIF CPU64}
   BTS    EAX, EDX
+{$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
+asm
+//    --> CL Value
+//        DL Bit
+//    <-- AL Result
+  AND    EDX, BitsPerByte - 1   // modulo BitsPerByte
+  MOVZX  EAX, CL
+  BTS    EAX, EDX
+{$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+asm
+//    --> DIL Value
+//        SIL Bit
+//    <-- AL Result
+  AND    ESI, BitsPerByte - 1   // modulo BitsPerByte
+  MOVZX  EAX, DIL
+  BTS    EAX, ESI
+{$ENDIF}
 end;
 
 function SetBit(const Value: Shortint; const Bit: TBitRange): Shortint;
