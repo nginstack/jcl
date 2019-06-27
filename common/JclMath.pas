@@ -57,6 +57,9 @@ uses
   {$ELSE ~HAS_UNITSCOPE}
   SysUtils, Classes,
   {$ENDIF ~HAS_UNITSCOPE}
+  {$IFDEF LINUX}
+  {$IFDEF DCC}System.{$ENDIF}Math,
+  {$ENDIF LINUX}
   JclBase;
 
 { Mathematical constants }
@@ -158,9 +161,9 @@ function DegToRad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_I
 {$ENDIF SUPPORTS_EXTENDED}
 function DegToRad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function DegToRad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastDegToRad;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 // Converts radians to degrees.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -168,9 +171,9 @@ function RadToDeg(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_I
 {$ENDIF SUPPORTS_EXTENDED}
 function RadToDeg(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function RadToDeg(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastRadToDeg;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 // Converts grads to radians.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -178,9 +181,9 @@ function GradToRad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_
 {$ENDIF SUPPORTS_EXTENDED}
 function GradToRad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function GradToRad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastGradToRad;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 // Converts radians to grads.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -188,9 +191,9 @@ function RadToGrad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_
 {$ENDIF SUPPORTS_EXTENDED}
 function RadToGrad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function RadToGrad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastRadToGrad;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 // Converts degrees to grads.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -198,9 +201,9 @@ function DegToGrad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_
 {$ENDIF SUPPORTS_EXTENDED}
 function DegToGrad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function DegToGrad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastDegToGrad;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 // Converts grads to degrees.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -208,9 +211,9 @@ function GradToDeg(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_
 {$ENDIF SUPPORTS_EXTENDED}
 function GradToDeg(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function GradToDeg(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastGradToDeg;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 { Logarithmic }
 
@@ -859,10 +862,6 @@ const
 
 implementation
 
-{$IFDEF DELPHI64_TEMPORARY}
-  {$DEFINE USE_MATH_UNIT}
-{$ENDIF DELPHI64_TEMPORARY}
-
 uses
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
@@ -877,15 +876,9 @@ uses
   {$ENDIF ~FPC}
   {$ENDIF MSWINDOWS}
   {$ENDIF ~HAS_UNITSCOPE}
-  {$IFDEF USE_MATH_UNIT}
-  System.Math,
-  {$ENDIF USE_MATH_UNIT}
   Jcl8087,
   JclResources,
   JclSynch;
-
-// Note (rrossmair): Usage of the "assembler" directive seems to be an Free Pascal requirement
-// (it's obsolete in Delphi since v. 2 I believe).
 
 // Internal helper routines
 // Linux: Get Global Offset Table (GOT) adress for Position Independent Code
@@ -972,7 +965,7 @@ end;
 
 // Expects degrees in ST(0), leaves radians in ST(0)
 // ST(0) := ST(0) * PI / 180
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastDegToRad; assembler;
 asm
         {$IFDEF PIC}
@@ -989,7 +982,7 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 // Converts radians to degrees.
 
@@ -1012,7 +1005,7 @@ end;
 
 // Expects radians in ST(0), leaves degrees in ST(0)
 // ST(0) := ST(0) * (180 / PI);
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastRadToDeg; assembler;
 asm
         {$IFDEF PIC}
@@ -1029,7 +1022,7 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF}
+{$ENDIF MSWINDOWS}
 
 // Converts grads to radians.
 
@@ -1052,7 +1045,7 @@ end;
 
 // Expects grads in ST(0), leaves radians in ST(0)
 // ST(0) := ST(0) * PI / 200
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastGradToRad; assembler;
 asm
         {$IFDEF PIC}
@@ -1069,7 +1062,7 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 // Converts radians to grads.
 
@@ -1092,7 +1085,7 @@ end;
 
 // Expects radians in ST(0), leaves grads in ST(0)
 // ST(0) := ST(0) * (200 / PI);
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastRadToGrad; assembler;
 asm
         {$IFDEF PIC}
@@ -1109,7 +1102,7 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 // Converts degrees to grads.
 
@@ -1132,7 +1125,7 @@ end;
 
 // Expects Degrees in ST(0), leaves grads in ST(0)
 // ST(0) := ST(0) * (200 / 180);
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastDegToGrad; assembler;
 asm
         {$IFDEF PIC}
@@ -1149,7 +1142,7 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 // Converts grads to degrees.
 
@@ -1172,7 +1165,7 @@ end;
 
 // Expects grads in ST(0), leaves radians in ST(0)
 // ST(0) := ST(0) * PI / 200
-{$IFNDEF PUREPASCAL}
+{$IFDEF MSWINDOWS}
 procedure FastGradToDeg; assembler;
 asm
         {$IFDEF PIC}
@@ -1189,7 +1182,7 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF PUREPASCAL}
+{$ENDIF MSWINDOWS}
 
 procedure DomainCheck(Err: Boolean);
 begin
@@ -1684,22 +1677,19 @@ begin
 end;
 
 function CosH(X: Float): Float;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL)}
 begin
   Result := 0.5 * (Exp(X) + Exp(-X));
-end;
-{$ELSE ~PUREPASCAL}
+{$ELSEIF Defined(LINUX)}
+begin
+  Result := Math.Cosh(X);
+{$ELSE}
 const
   RoundDown: Word = $177F;
   OneHalf: Float = 0.5;
-{$IFNDEF USE_MATH_UNIT}
 var
   ControlWW: Word;
-{$ENDIF ~USE_MATH_UNIT}
 begin
-  {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.Cosh(X);
-  {$ELSE ~USE_MATH_UNIT}
   asm
           {$IFDEF PIC}
           CALL    GetGOT
@@ -1745,9 +1735,8 @@ begin
           FWAIT
           FSTP    Result
   end;
-  {$ENDIF ~USE_MATH_UNIT}
+{$ENDIF ~LINUX}
 end;
-{$ENDIF ~PUREPASCAL}
 
 function CotH(X: Float): Float;
 begin
@@ -1769,22 +1758,19 @@ begin
 end;
 
 function SinH(X: Float): Float;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL)}
 begin
   Result := 0.5 * (JclMath.Exp(X) - JclMath.Exp(-X));
-end;
-{$ELSE ~PUREPASCAL}
+{$ELSEIF Defined(LINUX)}
+begin
+  Result := Math.Sinh(X);
+{$ELSE}
 const
   RoundDown: Word = $177F;
   OneHalf: Float = 0.5;
-{$IFNDEF USE_MATH_UNIT}
 var
   ControlWW: Word;
-{$ENDIF ~USE_MATH_UNIT}
 begin
-  {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.Sinh(X);
-  {$ELSE ~USE_MATH_UNIT}
   asm
           {$IFDEF PIC}
           CALL    GetGOT
@@ -1830,9 +1816,8 @@ begin
           FWAIT
           FSTP    Result
   end;
-  {$ENDIF ~USE_MATH_UNIT}
+  {$ENDIF ~LINUX}
 end;
-{$ENDIF ~PUREPASCAL}
 
 function TanH(X: Float): Float;
 begin
