@@ -156,14 +156,12 @@ procedure SetBitBuffer(var Value; const Bit: Int64); overload;
 {$ENDIF CPU64}
 
 function TestBit(const Value: Byte; const Bit: TBitRange): Boolean; overload;
-{$IFDEF MSWINDOWS}
 function TestBit(const Value: Shortint; const Bit: TBitRange): Boolean; overload;
 function TestBit(const Value: Smallint; const Bit: TBitRange): Boolean; overload;
 function TestBit(const Value: Word; const Bit: TBitRange): Boolean; overload;
 function TestBit(const Value: Cardinal; const Bit: TBitRange): Boolean; overload;
 function TestBit(const Value: Integer; const Bit: TBitRange): Boolean; overload;
 function TestBit(const Value: Int64; const Bit: TBitRange): Boolean; overload;
-{$ENDIF MSWINDOWS}
 function TestBitBuffer(const Value; const Bit: Cardinal): Boolean; overload;
 {$IFDEF CPU64}
 function TestBitBuffer(const Value; const Bit: Int64): Boolean; overload;
@@ -178,14 +176,12 @@ function TestBits(const Value, Mask: Integer): Boolean; overload;
 function TestBits(const Value, Mask: Int64): Boolean; overload;
 
 function ToggleBit(const Value: Byte; const Bit: TBitRange): Byte; overload;
-{$IFDEF MSWINDOWS}
 function ToggleBit(const Value: Shortint; const Bit: TBitRange): Shortint; overload;
 function ToggleBit(const Value: Smallint; const Bit: TBitRange): Smallint; overload;
 function ToggleBit(const Value: Word; const Bit: TBitRange): Word; overload;
 function ToggleBit(const Value: Cardinal; const Bit: TBitRange): Cardinal; overload;
 function ToggleBit(const Value: Integer; const Bit: TBitRange): Integer; overload;
 function ToggleBit(const Value: Int64; const Bit: TBitRange): Int64; overload;
-{$ENDIF MSWINDOWS}
 procedure ToggleBitBuffer(var Value; const Bit: Cardinal); overload;
 {$IFDEF CPU64}
 procedure ToggleBitBuffer(var Value; const Bit: Int64); overload;
@@ -209,12 +205,10 @@ function BitsNeeded(const X: Int64): Integer; overload;
 function Digits(const X: Cardinal): Integer;
 
 function ReverseBytes(Value: Word): Word; overload;
-{$IFDEF MSWINDOWS}
 function ReverseBytes(Value: Smallint): Smallint; overload;
 function ReverseBytes(Value: Integer): Integer; overload;
 function ReverseBytes(Value: Cardinal): Cardinal; overload;
 function ReverseBytes(Value: Int64): Int64; overload;
-{$ENDIF MSWINDOWS}
 function ReverseBytes(P: Pointer; Count: Integer): Pointer; overload;
 
 // Arithmetic
@@ -1525,9 +1519,8 @@ asm // Linux x64
 {$ENDIF ~MSWINDOWS}
 end;
 
-{$IFDEF MSWINDOWS}
 function TestBit(const Value: Shortint; const Bit: TBitRange): Boolean;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := (Value shr (Bit and (BitsPerShortint - 1))) and 1 <> 0;
 end;
@@ -1549,11 +1542,11 @@ end;
 {$ENDIF ~PUREPASCAL}
 
 function TestBit(const Value: Smallint; const Bit: TBitRange): Boolean;
-{$IF Defined(PUREPASCAL)}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := (Value shr (Bit and (BitsPerSmallint - 1))) and 1 <> 0;
 end;
-{$ELSEIF Defined(MSWINDOWS)}
+{$ELSE}
 asm
   // 32 --> AX Value
   //        DL Bit
@@ -1571,11 +1564,11 @@ end;
 {$ENDIF}
 
 function TestBit(const Value: Word; const Bit: TBitRange): Boolean;
-{$IF Defined(PUREPASCAL)}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := (Value shr (Bit and (BitsPerWord - 1))) and 1 <> 0;
 end;
-{$ELSEIF Defined(MSWINDOWS)}
+{$ELSE}
 asm
   // 32 --> AX Value
   //        DL Bit
@@ -1593,11 +1586,11 @@ end;
 {$ENDIF}
 
 function TestBit(const Value: Cardinal; const Bit: TBitRange): Boolean;
-{$IF Defined(PUREPASCAL)}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := (Value shr (Bit and (BitsPerCardinal - 1))) and 1 <> 0;
 end;
-{$ELSEIF Defined(MSWINDOWS)}
+{$ELSE}
 asm
   // 32 --> EAX Value
   //        DL  Bit
@@ -1614,11 +1607,11 @@ end;
 {$ENDIF}
 
 function TestBit(const Value: Integer; const Bit: TBitRange): Boolean;
-{$IF Defined(PUREPASCAL)}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := (Value shr (Bit and (BitsPerInteger - 1))) and 1 <> 0;
 end;
-{$ELSEIF Defined(MSWINDOWS)}
+{$ELSE}
 asm
   // 32 --> EAX Value
   //        DL  Bit
@@ -1635,12 +1628,10 @@ end;
 {$ENDIF}
 
 function TestBit(const Value: Int64; const Bit: TBitRange): Boolean;
-{$IFDEF CPU32}
+{$IF Defined(CPU32) or Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := (Value shr (Bit and (BitsPerInt64 - 1))) and 1 <> 0;
-end;
-{$ENDIF CPU32}
-{$IFDEF CPUX64}
+{$ELSE}
 asm
   // --> RCX Value
   //     DL  Bit
@@ -1648,9 +1639,8 @@ asm
   MOV    RAX, RCX
   BT     RAX, RDX
   SETC   AL
+{$ENDIF}
 end;
-{$ENDIF CPUX64}
-{$ENDIF MSWINDOWS}
 
 function TestBitBuffer(const Value; const Bit: Cardinal): Boolean;
 {$IFDEF PUREPASCAL}
@@ -1753,9 +1743,8 @@ asm // Linux x64
 {$ENDIF}
 end;
 
-{$IFDEF MSWINDOWS}
 function ToggleBit(const Value: Shortint; const Bit: TBitRange): Shortint;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerShortint - 1)));
 end;
@@ -1776,10 +1765,9 @@ end;
 {$ENDIF ~PUREPASCAL}
 
 function ToggleBit(const Value: Smallint; const Bit: TBitRange): Smallint;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerSmallint - 1)));
-end;
 {$ELSE ~PUREPASCAL}
 asm
   // 32 --> AX Value
@@ -1793,14 +1781,13 @@ asm
   MOVZX  EAX, CX
   {$ENDIF CPU64}
   BTC    EAX, EDX
-end;
 {$ENDIF ~PUREPASCAL}
+end;
 
 function ToggleBit(const Value: Word; const Bit: TBitRange): Word;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerWord - 1)));
-end;
 {$ELSE ~PUREPASCAL}
 asm
   // 32 --> AX Value
@@ -1814,14 +1801,13 @@ asm
   MOVZX  EAX, CX
   {$ENDIF CPU64}
   BTC    EAX, EDX
-end;
 {$ENDIF ~PUREPASCAL}
+end;
 
 function ToggleBit(const Value: Cardinal; const Bit: TBitRange): Cardinal;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerCardinal - 1)));
-end;
 {$ELSE ~PUREPASCAL}
 asm
   // 32 --> EAX Value
@@ -1834,14 +1820,13 @@ asm
   MOV    EAX, ECX
   {$ENDIF CPU64}
   BTC    EAX, EDX
-end;
 {$ENDIF ~PUREPASCAL}
+end;
 
 function ToggleBit(const Value: Integer; const Bit: TBitRange): Integer;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := Value xor (1 shl (Bit and (BitsPerInteger - 1)));
-end;
 {$ELSE ~PUREPASCAL}
 asm
   // 32 --> EAX Value
@@ -1854,23 +1839,22 @@ asm
   MOV    EAX, ECX
   {$ENDIF CPU64}
   BTC    EAX, EDX
-end;
 {$ENDIF ~PUREPASCAL}
+end;
 
 function ToggleBit(const Value: Int64; const Bit: TBitRange): Int64;
-{$IFDEF CPU32}
+{$IF Defined(CPU32) or Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := Value xor (Int64(1) shl (Bit and (BitsPerInt64 - 1)));
-{$ELSE ~CPU32}
+{$ELSE}
 asm
   // --> RCX Value
   //     DL  Bit
   // <-- RAX Result
   MOV    RAX, RCX
   BTC    RAX, RDX
-{$ENDIF ~CPU32}
+{$ENDIF}
 end;
-{$ENDIF MSWINDOWS}
 
 procedure ToggleBitBuffer(var Value; const Bit: Cardinal);
 {$IFDEF PUREPASCAL}
@@ -2065,8 +2049,8 @@ asm // Linux x64
 {$ENDIF ~MSWINDOWS}
 end;
 
-{$IFDEF MSWINDOWS}
 function ReverseBytes(Value: Smallint): Smallint;
+{$IF Defined(MSWINDOWS)}
 asm
   {$IFDEF CPU32}
   // --> AX Value
@@ -2076,13 +2060,21 @@ asm
   {$IFDEF CPU64}
   // --> CX Value
   // <-- AX Value
-  MOV    CL, AH
-  MOV    CH, AL
+  MOV    AH, CL
+  MOV    AL, CH
   {$ENDIF CPU64}
+{$ELSE ~MSWINDOWS}
+asm // Linux x64
+  // --> DI Value
+  // <-- AX Value
+  MOV    AX, DI
+  MOV    AH, CL
+  MOV    AL, CH
+{$ENDIF ~MSWINDOWS}
 end;
 
 function ReverseBytes(Value: Integer): Integer;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := (Value shr 24) or (Value shl 24) or ((Value and $00FF0000) shr 8) or ((Value and $0000FF00) shl 8);
 {$ELSE ~PUREPASCAL}
@@ -2102,7 +2094,7 @@ asm
 end;
 
 function ReverseBytes(Value: Cardinal): Cardinal;
-{$IFDEF PUREPASCAL}
+{$IF Defined(PUREPASCAL) or not Defined(MSWINDOWS)}
 begin
   Result := (Value shr 24) or (Value shl 24) or ((Value and $00FF0000) shr 8) or ((Value and $0000FF00) shl 8);
 {$ELSE ~PUREPASCAL}
@@ -2122,7 +2114,7 @@ asm
 end;
 
 function ReverseBytes(Value: Int64): Int64;
-{$IFDEF CPU32}
+{$IF Defined(CPU32) or Defined(PUREPASCAL)}
 var
   Lo, Hi: Cardinal;
 begin
@@ -2131,15 +2123,20 @@ begin
   Hi := TJclULargeInteger(Value).LowPart;
   TJclULargeInteger(Result).HighPart := (Hi shr 24) or (Hi shl 24) or ((Hi and $00FF0000) shr 8) or ((Hi and $0000FF00) shl 8);
   TJclULargeInteger(Result).LowPart := (Lo shr 24) or (Lo shl 24) or ((Lo and $00FF0000) shr 8) or ((Lo and $0000FF00) shl 8);
-{$ELSE ~CPU32}
+{$ELSEIF Defined(MSWINDOWS)}
 asm
   // --> RCX Value
   // <-- RAX Result
   MOV    RAX, RCX
   BSWAP  RAX
-{$ENDIF ~CPU32}
+{$ELSE}
+asm
+  // --> RDI Value
+  // <-- RAX Result
+  MOV    RAX, RDI
+  BSWAP  RAX
+{$ENDIF}
 end;
-{$ENDIF MSWINDOWS}
 
 function ReverseBytes(P: Pointer; Count: Integer): Pointer;
 var

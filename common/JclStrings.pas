@@ -654,11 +654,23 @@ uses
 //=== Internal ===============================================================
 
 type
+  PStrRec = ^TStrRec;
+{$IFDEF DCC}
   TStrRec = packed record
     RefCount: Integer;
     Length: Integer;
   end;
-  PStrRec = ^TStrRec;
+{$ELSE ~DCC}
+  TStrRec = record
+    CodePage: TSystemCodePage;
+    ElementSize: Word;
+{$IFDEF CPU64}
+    Dummy: DWord;
+{$ENDIF CPU64}
+    RefCount: SizeInt;
+    Length: SizeInt;
+  end;
+{$ENDIF ~DCC}
 
 {$IFNDEF UNICODE_RTL_DATABASE}
 procedure LoadCharTypes;

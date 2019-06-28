@@ -595,11 +595,23 @@ uses
 //=== Internal ===============================================================
 
 type
+  PAnsiStrRec = ^TAnsiStrRec;
+{$IFDEF DCC}
   TAnsiStrRec = packed record
     RefCount: Integer;
     Length: Integer;
   end;
-  PAnsiStrRec = ^TAnsiStrRec;
+{$ELSE ~DCC}
+  TAnsiStrRec = record
+    CodePage: TSystemCodePage;
+    ElementSize: Word;
+{$IFDEF CPU64}
+    Dummy: DWord;
+{$ENDIF CPU64}
+    RefCount: SizeInt;
+    Length: SizeInt;
+  end;
+{$ENDIF ~DCC}
 
 const
   AnsiStrRecSize  = SizeOf(TAnsiStrRec);     // size of the AnsiString header rec
