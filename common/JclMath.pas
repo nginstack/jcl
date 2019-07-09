@@ -57,9 +57,7 @@ uses
   {$ELSE ~HAS_UNITSCOPE}
   SysUtils, Classes,
   {$ENDIF ~HAS_UNITSCOPE}
-  {$IFDEF LINUX}
-  {$IFDEF DCC}System.{$ENDIF}Math,
-  {$ENDIF LINUX}
+  Math,
   JclBase;
 
 { Mathematical constants }
@@ -861,6 +859,10 @@ const
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+{$IFDEF CPU64}
+  {$DEFINE USE_MATH_UNIT}
+{$ENDIF CPU64}
 
 uses
   {$IFDEF HAS_UNITSCOPE}
@@ -1680,7 +1682,7 @@ function CosH(X: Float): Float;
 {$IF Defined(PUREPASCAL)}
 begin
   Result := 0.5 * (Exp(X) + Exp(-X));
-{$ELSEIF Defined(LINUX)}
+{$ELSEIF Defined(USE_MATH_UNIT)}
 begin
   Result := Math.Cosh(X);
 {$ELSE}
@@ -1735,7 +1737,7 @@ begin
           FWAIT
           FSTP    Result
   end;
-{$ENDIF ~LINUX}
+{$ENDIF}
 end;
 
 function CotH(X: Float): Float;
@@ -1761,7 +1763,7 @@ function SinH(X: Float): Float;
 {$IF Defined(PUREPASCAL)}
 begin
   Result := 0.5 * (JclMath.Exp(X) - JclMath.Exp(-X));
-{$ELSEIF Defined(LINUX)}
+{$ELSEIF Defined(USE_MATH_UNIT)}
 begin
   Result := Math.Sinh(X);
 {$ELSE}
@@ -1816,7 +1818,7 @@ begin
           FWAIT
           FSTP    Result
   end;
-  {$ENDIF ~LINUX}
+  {$ENDIF}
 end;
 
 function TanH(X: Float): Float;
