@@ -223,8 +223,10 @@ function LogBaseN(Base, X: Float): Float;
 
 function ArcCos(X: Float): Float;
 function ArcCot(X: Float): Float; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$IFDEF DCC}
 function ArcCsc(X: Float): Float; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function ArcSec(X: Float): Float;
+{$ENDIF}
 function ArcSin(X: Float): Float;
 function ArcTan(X: Float): Float;
 function ArcTan2(Y, X: Float): Float;
@@ -1198,7 +1200,7 @@ function LogBase10(X: Float): Float;
 begin
   DomainCheck(X <= 0.0);
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.Log10(X);
+  Result := Math.Log10(X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLDLG2
@@ -1214,7 +1216,7 @@ function LogBase2(X: Float): Float;
 begin
   DomainCheck(X <= 0.0);
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.Log2(X);
+  Result := Math.Log2(X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLD1
@@ -1230,7 +1232,7 @@ function LogBaseN(Base, X: Float): Float;
 begin
   DomainCheck((X <= 0.0) or (Base <= 0.0) or (Base = 1.0));
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.LogN(Base, X);
+  Result := Math.LogN(Base, X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLD1
@@ -1252,7 +1254,7 @@ function ArcCos(X: Float): Float;
 begin
   DomainCheck(Abs(X) > 1.0);
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.ArcCos(X);
+  Result := Math.ArcCos(X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLD     X
@@ -1275,6 +1277,7 @@ begin
   Result := ArcTan(1 / X);
 end;
 
+{$IFDEF DCC}
 function ArcCsc(X: Float): Float;
 begin
   Result := ArcSec(X / Sqrt(X * X -1));
@@ -1284,7 +1287,7 @@ function ArcSec(X: Float): Float;
 begin
   DomainCheck((X > -1) and (X < 1));
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.ArcSec(X);
+  Result := Math.ArcSec(X);
   {$ELSE ~USE_MATH_UNIT}
   // FArcTan(Sqrt(X*X - 1));
   asm
@@ -1301,12 +1304,13 @@ begin
   end;
   {$ENDIF ~USE_MATH_UNIT}
 end;
+{$ENDIF DCC}
 
 function ArcSin(X: Float): Float;
 begin
   DomainCheck(Abs(X) > 1.0);
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.ArcSin(X);
+  Result := Math.ArcSin(X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLD     X
@@ -1336,7 +1340,7 @@ end;
 function ArcTan(X: Float): Float;
 begin
   {$IFDEF USE_MATH_UNIT}
-  System.Error(rePlatformNotImplemented);
+  System.Error(reInvalidPtr);
   Result := NaN; 
   {$ELSE ~USE_MATH_UNIT}
   asm
@@ -1364,7 +1368,7 @@ end;
 function ArcTan2(Y, X: Float): Float;
 begin
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.ArcTan2(Y, X);
+  Result := Math.ArcTan2(Y, X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLD     Y
@@ -1381,7 +1385,7 @@ function Cos(X: Float): Float;
 begin
   DomainCheck(Abs(X) > MaxAngle);
   {$IFDEF USE_MATH_UNIT}
-  System.Error(rePlatformNotImplemented);
+  System.Error(reInvalidPtr);
   Result := NaN;
   {$ELSE ~USE_MATH_UNIT}
   asm
@@ -1397,7 +1401,7 @@ function Cot(X: Float): Float;
 begin
   DomainCheck(Abs(X) > MaxAngle);
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.Cot(X);
+  Result := Math.Cot(X);
   {$ELSE ~USE_MATH_UNIT}
   { TODO : Cot = 1 / Tan -> Tan(X) <> 0.0 }
   asm
@@ -1440,7 +1444,7 @@ function Sec(X: Float): Float;
 begin
   DomainCheck(Abs(X) > MaxAngle);
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.Sec(X);
+  Result := Math.Sec(X);
   {$ELSE ~USE_MATH_UNIT}
   { TODO : Sec = 1 / Cos -> Cos(X) <> 0! }
   asm
@@ -1460,7 +1464,7 @@ begin
   DomainCheck(Abs(X) > MaxAngle);
   {$ENDIF ~MATH_EXT_SPECIALVALUES}
   {$IFDEF USE_MATH_UNIT}
-  System.Error(rePlatformNotImplemented);
+  System.Error(reInvalidPtr);
   Result := NaN;
   {$ELSE ~USE_MATH_UNIT}
   asm
@@ -1477,7 +1481,7 @@ procedure SinCos(X: Extended; out Sin, Cos: Extended);
 begin
   DomainCheck(Abs(X) > MaxAngle);
   {$IFDEF USE_MATH_UNIT}
-  System.Math.SinCos(X, Sin, Cos);
+  Math.SinCos(X, Sin, Cos);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLD     X
@@ -1505,7 +1509,7 @@ procedure SinCos(X: Double; out Sin, Cos: Double);
 begin
   DomainCheck(Abs(X) > MaxAngle);
   {$IFDEF USE_MATH_UNIT}
-  System.Math.SinCos(X, Sin, Cos);
+  Math.SinCos(X, Sin, Cos);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLD     X
@@ -1532,7 +1536,7 @@ procedure SinCos(X: Single; out Sin, Cos: Single);
 begin
   DomainCheck(Abs(X) > MaxAngle);
   {$IFDEF USE_MATH_UNIT}
-  System.Math.SinCos(X, Sin, Cos);
+  Math.SinCos(X, Sin, Cos);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLD     X
@@ -1559,7 +1563,7 @@ function Tan(X: Float): Float;
 begin
   DomainCheck(Abs(X) > MaxAngle);
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.Tan(X);
+  Result := Math.Tan(X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLD     X
@@ -1582,7 +1586,7 @@ function ArcCosH(X: Float): Float;
 begin
   DomainCheck(X < 1.0);
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.ArcCosh(X);
+  Result := Math.ArcCosh(X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLDLN2
@@ -1636,7 +1640,7 @@ end;
 function ArcSinH(X: Float): Float;
 begin
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.ArcSinh(X);
+  Result := Math.ArcSinh(X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLDLN2
@@ -1658,7 +1662,7 @@ function ArcTanH(X: Float): Float;
 begin
   DomainCheck(Abs(X) >= 1.0);
   {$IFDEF USE_MATH_UNIT}
-  Result := System.Math.ArcTanh(X);
+  Result := Math.ArcTanh(X);
   {$ELSE ~USE_MATH_UNIT}
   asm
           FLDLN2
