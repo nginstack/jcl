@@ -57,10 +57,11 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
-  System.SysUtils, System.Classes,{$IFDEF USE_MATH_UNIT}System.Math,{$ENDIF}
+  System.SysUtils, System.Classes,
   {$ELSE ~HAS_UNITSCOPE}
-  SysUtils, Classes,{$IFDEF USE_MATH_UNIT}Math,{$ENDIF}
+  SysUtils, Classes,
   {$ENDIF ~HAS_UNITSCOPE}
+  {$IFDEF USE_MATH_UNIT}Math,{$ENDIF}
   JclBase;
 
 { Mathematical constants }
