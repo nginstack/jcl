@@ -57,7 +57,6 @@ uses
   {$ELSE ~HAS_UNITSCOPE}
   SysUtils, Classes,
   {$ENDIF ~HAS_UNITSCOPE}
-  Math,
   JclBase;
 
 { Mathematical constants }
@@ -862,7 +861,7 @@ const
 
 implementation
 
-{$IFDEF CPU64}
+{$IFNDEF CPUX86}
   {$DEFINE USE_MATH_UNIT}
 {$ENDIF CPU64}
 
@@ -880,6 +879,9 @@ uses
   {$ENDIF ~FPC}
   {$ENDIF MSWINDOWS}
   {$ENDIF ~HAS_UNITSCOPE}
+  {$IFDEF USE_MATH_UNIT}
+    Math,
+  {$ENDIF USE_MATH_UNIT}
   Jcl8087,
   JclResources,
   JclSynch;
