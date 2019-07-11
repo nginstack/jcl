@@ -48,14 +48,18 @@ unit JclMath;
 
 interface
 
+{$IFNDEF CPUX86}
+  {$DEFINE USE_MATH_UNIT}
+{$ENDIF CPU64}
+
 uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes,{$IFDEF USE_MATH_UNIT}System.Math,{$ENDIF}
   {$ELSE ~HAS_UNITSCOPE}
-  SysUtils, Classes,
+  SysUtils, Classes,{$IFDEF USE_MATH_UNIT}Math,{$ENDIF}
   {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
@@ -861,10 +865,6 @@ const
 
 implementation
 
-{$IFNDEF CPUX86}
-  {$DEFINE USE_MATH_UNIT}
-{$ENDIF CPU64}
-
 uses
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
@@ -879,9 +879,6 @@ uses
   {$ENDIF ~FPC}
   {$ENDIF MSWINDOWS}
   {$ENDIF ~HAS_UNITSCOPE}
-  {$IFDEF USE_MATH_UNIT}
-    Math,
-  {$ENDIF USE_MATH_UNIT}
   Jcl8087,
   JclResources,
   JclSynch;
