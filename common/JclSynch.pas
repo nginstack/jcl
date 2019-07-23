@@ -74,7 +74,7 @@ function LockedExchangeSub(var Target: Integer; Value: Integer): Integer; overlo
 function LockedInc(var Target: Integer): Integer; overload;
 function LockedSub(var Target: Integer; Value: Integer): Integer; overload;
 
-{$IFDEF CPU64}
+{$IFDEF CPUX64}
 function LockedAdd(var Target: Int64; Value: Int64): Int64; overload;
 function LockedCompareExchange(var Target: Int64; Exch, Comp: Int64): Int64; overload;
 function LockedDec(var Target: Int64): Int64; overload;
@@ -90,7 +90,7 @@ function LockedSub(var Target: Int64; Value: Int64): Int64; overload;
 function LockedDec(var Target: NativeInt): NativeInt; overload;
 function LockedInc(var Target: NativeInt): NativeInt; overload;
 {$ENDIF BORLAND}
-{$ENDIF CPU64}
+{$ENDIF CPUX64}
 
 // TJclDispatcherObject
 //
@@ -381,7 +381,7 @@ const
 // Locked Integer manipulation
 function LockedAdd(var Target: Integer; Value: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         //     EDX Value
         // <-- EAX Result
@@ -389,20 +389,26 @@ asm
         MOV     EAX, EDX
         LOCK XADD [ECX], EAX
         ADD     EAX, EDX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         //     EDX Value
         // <-- EAX Result
         MOV     EAX, EDX
         LOCK XADD [RCX], EAX
         ADD     EAX, EDX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        //     ESI Value
+        // <-- EAX Result
+        MOV     EAX, ESI
+        LOCK XADD [RDI], EAX
+        ADD     EAX, ESI
+        {$ENDIF}
 end;
 
 function LockedCompareExchange(var Target: Integer; Exch, Comp: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         //     EDX Exch
         //     ECX Comp
@@ -412,8 +418,7 @@ asm
         //     EDX Exch
         //     ECX Target
         LOCK CMPXCHG [ECX], EDX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         //     EDX Exch
         //     R8  Comp
@@ -423,12 +428,22 @@ asm
         //     EDX Exch
         //     RAX Comp
         LOCK CMPXCHG [RCX], EDX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        //     ESI Exch
+        //     EDX  Comp
+        // <-- EAX Result
+        MOV     RAX, EDX
+        //     RDI Target
+        //     ESI Exch
+        //     RAX Comp
+        LOCK CMPXCHG [RDI], ESI
+        {$ENDIF}
 end;
 
 function LockedCompareExchange(var Target: Pointer; Exch, Comp: Pointer): Pointer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         //     EDX Exch
         //     ECX Comp
@@ -438,8 +453,7 @@ asm
         //     EDX Exch
         //     ECX Target
         LOCK CMPXCHG [ECX], EDX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         //     RDX Exch
         //     R8  Comp
@@ -449,12 +463,22 @@ asm
         //     RDX Exch
         //     RAX Comp
         LOCK CMPXCHG [RCX], RDX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        //     RSI Exch
+        //     RDX  Comp
+        // <-- RAX Result
+        MOV     RAX, RDX
+        //     RDI Target
+        //     RSI Exch
+        //     RAX Comp
+        LOCK CMPXCHG [RDI], RSI
+        {$ENDIF}
 end;
 
 function LockedCompareExchange(var Target: TObject; Exch, Comp: TObject): TObject;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         //     EDX Exch
         //     ECX Comp
@@ -464,42 +488,56 @@ asm
         //     EDX Exch
         //     ECX Target
         LOCK CMPXCHG [ECX], EDX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         //     RDX Exch
         //     R8  Comp
         // <-- RAX Result
         MOV     RAX, R8
-        // --> RCX Target
+        //     RCX Target
         //     RDX Exch
         //     RAX Comp
         LOCK CMPXCHG [RCX], RDX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        //     RSI Exch
+        //     RDX  Comp
+        // <-- RAX Result
+        MOV     RAX, RDX
+        //     RDI Target
+        //     RSI Exch
+        //     RAX Comp
+        LOCK CMPXCHG [RDI], RSI
+        {$ENDIF}
 end;
 
 function LockedDec(var Target: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, -1
         LOCK XADD [ECX], EAX
         DEC     EAX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         // <-- EAX Result
         MOV     EAX, -1
         LOCK XADD [RCX], EAX
         DEC     EAX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        // <-- EAX Result
+        MOV     EAX, -1
+        LOCK XADD [RDI], EAX
+        DEC     EAX
+        {$ENDIF}
 end;
 
 function LockedExchange(var Target: Integer; Value: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         //     EDX Value
         // <-- EAX Result
@@ -508,8 +546,7 @@ asm
         //     ECX Target
         //     EAX Value
         LOCK XCHG [ECX], EAX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         //     EDX Value
         // <-- EAX Result
@@ -517,12 +554,20 @@ asm
         //     RCX Target
         //     EAX Value
         LOCK XCHG [RCX], EAX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        //     ESI Value
+        // <-- EAX Result
+        MOV     EAX, ESI
+        //     RDI Target
+        //     EAX Value
+        LOCK XCHG [RDI], EAX
+        {$ENDIF}
 end;
 
 function LockedExchangeAdd(var Target: Integer; Value: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         //     EDX Value
         // <-- EAX Result
@@ -531,8 +576,7 @@ asm
         //     ECX Target
         //     EAX Value
         LOCK XADD [ECX], EAX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         //     EDX Value
         // <-- EAX Result
@@ -540,46 +584,62 @@ asm
         //     RCX Target
         //     EAX Value
         LOCK XADD [RCX], EAX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        //     ESI Value
+        // <-- EAX Result
+        MOV     EAX, ESI
+        //     RDI Target
+        //     EAX Value
+        LOCK XADD [RDI], EAX
+        {$ENDIF}
 end;
 
 function LockedExchangeDec(var Target: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, -1
         LOCK XADD [ECX], EAX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         // <-- EAX Result
         MOV     EAX, -1
         LOCK XADD [RCX], EAX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        // <-- EAX Result
+        MOV     EAX, -1
+        LOCK XADD [RDI], EAX
+        {$ENDIF}
 end;
 
 function LockedExchangeInc(var Target: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, 1
         LOCK XADD [ECX], EAX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         // <-- EAX Result
         MOV     EAX, 1
         LOCK XADD [RCX], EAX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        // <-- EAX Result
+        MOV     EAX, 1
+        LOCK XADD [RDI], EAX
+        {$ENDIF}
 end;
 
 function LockedExchangeSub(var Target: Integer; Value: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         //     EDX Value
         // <-- EAX Result
@@ -589,8 +649,7 @@ asm
         //     ECX Target
         //     EAX -Value
         LOCK XADD [ECX], EAX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         //     EDX Value
         // <-- EAX Result
@@ -599,31 +658,45 @@ asm
         //     RCX Target
         //     EAX -Value
         LOCK XADD [RCX], EAX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        //     ESI Value
+        // <-- EAX Result
+        NEG     ESI
+        MOV     EAX, ESI
+        //     RDI Target
+        //     EAX -Value
+        LOCK XADD [RDI], EAX
+        {$ENDIF}
 end;
 
 function LockedInc(var Target: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         // <-- EAX Result
         MOV     ECX, EAX
         MOV     EAX, 1
         LOCK XADD [ECX], EAX
         INC     EAX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         // <-- EAX Result
         MOV     EAX, 1
         LOCK XADD [RCX], EAX
         INC     EAX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        // <-- EAX Result
+        MOV     EAX, 1
+        LOCK XADD [RDI], EAX
+        INC     EAX
+        {$ENDIF}
 end;
 
 function LockedSub(var Target: Integer; Value: Integer): Integer;
 asm
-        {$IFDEF CPU32}
+        {$IF Defined(CPUX86) and Defined(MSWINDOWS)}
         // --> EAX Target
         //     EDX Value
         // <-- EAX Result
@@ -632,8 +705,7 @@ asm
         MOV     EAX, EDX
         LOCK XADD [ECX], EAX
         ADD     EAX, EDX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(MSWINDOWS)}
         // --> RCX Target
         //     EDX Value
         // <-- EAX Result
@@ -641,13 +713,22 @@ asm
         MOV     EAX, EDX
         LOCK XADD [RCX], EAX
         ADD     EAX, EDX
-        {$ENDIF CPU64}
+        {$ELSEIF Defined(CPUX64) and Defined(LINUX)}
+        // --> RDI Target
+        //     ESI Value
+        // <-- EAX Result
+        NEG     ESI
+        MOV     EAX, ESI
+        LOCK XADD [RDI], EAX
+        ADD     EAX, ESI
+        {$ENDIF}
 end;
 
-{$IFDEF CPU64}
+{$IFDEF CPUX64}
 
 // Locked Int64 manipulation
 function LockedAdd(var Target: Int64; Value: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         //     RDX Value
@@ -655,9 +736,19 @@ asm
         MOV     RAX, RDX
         LOCK XADD [RCX], RAX
         ADD     RAX, RDX
+{$ELSEIF Defined(LINUX)}
+asm
+        // --> RDI Target
+        //     RSI Value
+        // <-- RAX Result
+        MOV     RAX, RSI
+        LOCK XADD [RDI], RAX
+        ADD     RAX, RSI
+{$ENDIF}
 end;
 
 function LockedCompareExchange(var Target: Int64; Exch, Comp: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         //     RDX Exch
@@ -665,52 +756,105 @@ asm
         // <-- RAX Result
         MOV     RAX, R8
         LOCK CMPXCHG [RCX], RDX
+{$ELSEIF Defined(LINUX)}
+        // --> RDI Target
+        //     RSI Exch
+        //     RDX  Comp
+        // <-- RAX Result
+asm
+        MOV     RAX, RDX
+        LOCK CMPXCHG [RDI], RSI
+{$ENDIF}
 end;
 
 function LockedDec(var Target: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         // <-- RAX Result
         MOV     RAX, -1
         LOCK XADD [RCX], RAX
         DEC     RAX
+{$ELSEIF Defined(LINUX)}
+asm
+        // --> RDI Target
+        // <-- RAX Result
+        MOV     RAX, -1
+        LOCK XADD [RDI], RAX
+        DEC     RAX
+{$ENDIF}
 end;
 
 function LockedExchange(var Target: Int64; Value: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         //     RDX Value
         // <-- RAX Result
         MOV     RAX, RDX
         LOCK XCHG [RCX], RAX
+{$ELSEIF Defined(LINUX)}
+asm
+        // --> RDI Target
+        //     RSI Value
+        // <-- RAX Result
+        MOV     RAX, RSI
+        LOCK XCHG [RDI], RAX
+{$ENDIF}
 end;
 
 function LockedExchangeAdd(var Target: Int64; Value: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         //     RDX Value
         // <-- RAX Result
         MOV     RAX, RDX
         LOCK XADD [RCX], RAX
+{$ELSEIF Defined(LINUX)}
+asm
+        // --> RDI Target
+        //     RSI Value
+        // <-- RAX Result
+        MOV     RAX, RSI
+        LOCK XADD [RDI], RAX
+{$ENDIF}
 end;
 
 function LockedExchangeDec(var Target: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         // <-- RAX Result
         MOV     RAX, -1
         LOCK XADD [RCX], RAX
+{$ELSEIF Defined(LINUX)}
+asm
+        // --> RDI Target
+        // <-- RAX Result
+        MOV     RAX, -1
+        LOCK XADD [RDI], RAX
+{$ENDIF}
 end;
 
 function LockedExchangeInc(var Target: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         // <-- RAX Result
         MOV     RAX, 1
         LOCK XADD [RCX], RAX
+{$ELSEIF Defined(LINUX)}
+asm
+        // --> RDI Target
+        // <-- RAX Result
+        MOV     RAX, 1
+        LOCK XADD [RDI], RAX
+{$ENDIF}
 end;
 
 function LockedExchangeSub(var Target: Int64; Value: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         //     RDX Value
@@ -718,18 +862,37 @@ asm
         NEG     RDX
         MOV     RAX, RDX
         LOCK XADD [RCX], RAX
+{$ELSEIF Defined(LINUX)}
+asm
+        // --> RDI Target
+        //     RSI Value
+        // <-- RAX Result
+        NEG     RSI
+        MOV     RAX, RSI
+        LOCK XADD [RDI], RAX
+{$ENDIF}
 end;
 
 function LockedInc(var Target: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         // <-- RAX Result
         MOV     RAX, 1
         LOCK XADD [RCX], RAX
         INC     RAX
+{$ELSEIF Defined(LINUX)}
+asm
+        // --> RDI Target
+        // <-- RAX Result
+        MOV     RAX, 1
+        LOCK XADD [RDI], RAX
+        INC     RAX
+{$ENDIF}
 end;
 
 function LockedSub(var Target: Int64; Value: Int64): Int64;
+{$IF Defined(MSWINDOWS)}
 asm
         // --> RCX Target
         //     RDX Value
@@ -738,6 +901,16 @@ asm
         MOV     RAX, RDX
         LOCK XADD [RCX], RAX
         ADD     RAX, RDX
+{$ELSEIF Defined(LINUX)}
+asm
+        // --> RDI Target
+        //     RSI Value
+        // <-- RAX Result
+        NEG     RSI
+        MOV     RAX, RSI
+        LOCK XADD [RDI], RAX
+        ADD     RAX, RSI
+{$ENDIF}
 end;
 
 {$IFDEF BORLAND}
@@ -762,7 +935,7 @@ end;
 
 {$ENDIF BORLAND}
 
-{$ENDIF CPU64}
+{$ENDIF CPUX64}
 
 //=== { TJclDispatcherObject } ===============================================
 
