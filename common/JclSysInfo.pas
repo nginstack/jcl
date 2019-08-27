@@ -2636,7 +2636,7 @@ end;
 
 //=== Processes, Tasks and Modules ===========================================
 
-{$IFDEF UNIX}
+{$IFDEF HAS_UNIT_LIBC}
 const
   CommLen = 16;  // synchronize with size of comm in struct task_struct in
                  //     /usr/include/linux/sched.h
@@ -2709,7 +2709,7 @@ begin
   end;
 end;
 
-{$ENDIF UNIX}
+{$ENDIF HAS_UNIT_LIBC}
 
 {$IFDEF MSWINDOWS}
 

@@ -433,7 +433,7 @@ asm
         //     ESI Exch
         //     EDX  Comp
         // <-- EAX Result
-        MOV     RAX, EDX
+        MOV    EAX, EDX
         //     RDI Target
         //     ESI Exch
         //     RAX Comp
