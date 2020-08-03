@@ -203,11 +203,10 @@ procedure GetIpAddresses(Results: TStrings); overload;
 {$IFDEF HAS_UNIT_LIBC}
 procedure GetIpAddresses(Results: TStrings; const HostName: AnsiString); overload;
 procedure GetIpAddresses(Results: TStrings); overload;
-function GetLocalUserName: string;
 {$ENDIF HAS_UNIT_LIBC}
+function GetLocalUserName: string;
 function GetLocalComputerName: string;
 {$IFDEF MSWINDOWS}
-function GetLocalUserName: string;
 function GetUserDomainName(const CurUser: string): string;
 function GetWorkGroupName: WideString;
 {$ENDIF MSWINDOWS}
@@ -2395,14 +2394,13 @@ begin
 end;
 {$ENDIF MSWINDOWS}
 
-{$IFDEF HAS_UNIT_LIBC}
 function GetLocalUserName: string;
+{$IFDEF LINUX}
 begin
-  Result := GetEnv('USER');
+  Result := GetEnvironmentVariable('USER');
 end;
-{$ENDIF HAS_UNIT_LIBC}
+{$ENDIF}
 {$IFDEF MSWINDOWS}
-function GetLocalUserName: string;
 var
   Count: DWORD;
 begin
