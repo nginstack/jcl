@@ -86,9 +86,9 @@ type
   TJclBorRADToolPath = string;
 
 const
-  SupportedDelphiVersions = [5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
-  SupportedBCBVersions    = [5, 6, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
-  SupportedBDSVersions    = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17];
+  SupportedDelphiVersions = [5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
+  SupportedBCBVersions    = [5, 6, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
+  SupportedBDSVersions    = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21];
 
   // Object Repository
   BorRADToolRepositoryPagesSection    = 'Repository Pages';
@@ -804,7 +804,7 @@ const
   RADStudioDirName = 'RAD Studio';
   RADStudio14UpDirName = 'Embarcadero\Studio';
 
-  BDSVersions: array [1..17] of TBDSVersionInfo = (
+  BDSVersions: array [1..21] of TBDSVersionInfo = (
     (
       Name: @RsCSharpName;
       VersionStr: '1.0';
@@ -940,6 +940,38 @@ const
       IDEPkgVersion: 23;
       PkgVersion: 23;
       CoreIdeVersion: '230';
+      Supported: True),
+    (
+      Name: @RsRSName;
+      VersionStr: '10.1';
+      DCCVersion: 31.0;
+      IDEPkgVersion: 24;
+      PkgVersion: 24;
+      CoreIdeVersion: '240';
+      Supported: True),
+    (
+      Name: @RsRSName;
+      VersionStr: '10.2';
+      DCCVersion: 32.0;
+      IDEPkgVersion: 25;
+      PkgVersion: 25;
+      CoreIdeVersion: '250';
+      Supported: True),
+    (
+      Name: @RsRSName;
+      VersionStr: '10.3';
+      DCCVersion: 33.0;
+      IDEPkgVersion: 26;
+      PkgVersion: 26;
+      CoreIdeVersion: '260';
+      Supported: True),
+    (
+      Name: @RsRSName;
+      VersionStr: '10.4';
+      DCCVersion: 34.0;
+      IDEPkgVersion: 27;
+      PkgVersion: 27;
+      CoreIdeVersion: '270';
       Supported: True)
   );
   {$ENDIF MSWINDOWS}
@@ -1108,7 +1140,7 @@ begin
   FileName := '';
 
   ResetMemory(LocaleName, SizeOf(LocaleName));
-  GetLocaleInfo(GetThreadLocale, LOCALE_SABBREVLANGNAME, LocaleName, SizeOf(LocaleName));
+  GetLocaleInfo(GetThreadLocale, LOCALE_SABBREVLANGNAME, LocaleName, Length(LocaleName));
   if LocaleName[0] <> #0 then
   begin
     FileName := BaseBinName;
@@ -4016,7 +4048,7 @@ end;
 class function TJclBDSInstallation.GetRADStudioVarsFileName(const RootDir: string; IDEVersionNumber: Integer): TFileName;
 begin
   if IDEVersionNumber >= 5 then
-    Result := Format('%s%sbin%srsvars.bat', [ExtractShortPathName(RootDir), DirDelimiter, DirDelimiter])
+    Result := Format('%s%sbin%srsvars.bat', [RootDir, DirDelimiter, DirDelimiter])
   else
     raise EJclBorRADException.CreateResFmt(@RsERsVars, [RadToolName(IDEVersionNumber), IDEVersionNumber, LoadResString(@RsMsBuildNotSupported)]);
 end;
