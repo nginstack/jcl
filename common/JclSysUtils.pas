@@ -534,13 +534,10 @@ function Execute(const CommandLine: string; var Output, Error: string;
 function Execute(const CommandLine: string; AbortEvent: TJclEvent;
   var Output, Error: string; RawOutput: Boolean = False; RawError: Boolean = False;
   ProcessPriority: TJclProcessPriority = ppNormal; AutoConvertOem: Boolean = False): Cardinal; overload;
-{$ENDIF}  
 
 type
-  {$IFDEF MSWINDOWS}
   TJclExecuteCmdProcessOptionBeforeResumeEvent = procedure(const ProcessInfo: TProcessInformation) of object;
   TStartupVisibility = (svHide, svShow, svNotSet);
-  {$ENDIF MSWINDOWS}
 
   TJclExecuteCmdProcessOptions = {record} class(TObject)
   private
@@ -596,6 +593,8 @@ type
   end;
 
 function ExecuteCmdProcess(Options: TJclExecuteCmdProcessOptions): Boolean;
+
+{$ENDIF}
 
 type
 {$HPPEMIT 'namespace Jclsysutils'}

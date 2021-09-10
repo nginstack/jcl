@@ -50,6 +50,6 @@ ou Linux. Ter atenção especial com os seguintes arquivos:
    Compatibilidade das classes TJclHandleStream e TJclFileStream com FPC/Linux.
    * JclStringLists: TJclInterfacedStringList e TJclStringList compatíveis com FPC.
    * JclStrings: IFDEF em CharType para Windows.
-   * jcl.inc: desativar LOCALSYMBOLS, DEFINITIONINFO e REFERENCEINFO para o FPC.
+   * jcl.inc: desativar LOCALSYMBOLS, DEFINITIONINFO, REFERENCEINFO e SUPPORTS\_GENERICS para o FPC.
    * JclUnicode: IFDEF em TSearchEngine para o Windows.
    * JclSysInfo e JclSysUtils: diversas APIs revistas para compatibilizar com o FPC.

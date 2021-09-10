@@ -711,5 +711,7 @@ ALERT_jedi_inc_incompatible
 
 {$IFDEF FPC}
   {$DEFINE DEBUG_NO_TD32}
+  // Disable Generics because FPC does not support foward declarations
+  {$UNDEF SUPPORTS_GENERICS}
 {$ENDIF FPC}
 

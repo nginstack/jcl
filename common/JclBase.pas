@@ -354,10 +354,13 @@ function Addr64ToAddr32(const Value: TJclAddr64): TJclAddr32;
 function Addr32ToAddr64(const Value: TJclAddr32): TJclAddr64;
 
 {$IFDEF FPC}
-  {$IFDEF MSWINDOWS}
   type
+  {$IFDEF MSWINDOWS}
     HWND = type Windows.HWND;
   {$ENDIF MSWINDOWS}
+    IEquatable<T> = interface(IInterface)
+      function Equals(Value: T): Boolean;
+    end;
 {$ENDIF FPC}
 
  {$IFDEF SUPPORTS_GENERICS}
