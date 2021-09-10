@@ -1,3 +1,5 @@
-common/backup/
-include/backup/
-
+**/*.lps
+**/backup/*.pas
+**/backup/*.dpr
+**/backup/*.lpi
+__history
