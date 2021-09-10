@@ -2006,8 +2006,8 @@ resourcestring
   RsProductTypeEnterprise       = 'Enterprise';
   RsProductTypeWebEdition       = 'Web Edition';
 
-  RsEOpenGLInfo = 'GetOpenGLVersion: %s failed';
-  RsENetWkstaGetInfo = 'NetWkstaGetInfo failed';
+  RsEOpenGLInfo                 = 'GetOpenGLVersion: %s failed';
+  RsENetWkstaGetInfo            = 'NetWkstaGetInfo failed';
 
   {$IFDEF MSWINDOWS}
   RsSPInfo = 'SP%u';

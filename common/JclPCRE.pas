@@ -125,9 +125,6 @@ type
     FErrorOffset: Integer;
 
     FVector: PPCREIntArray;
-{$IF CompilerVersion < 23}
-    FVectorSize: Integer;
-{$IFEND}
     FCaptureCount: Integer;
 
     FOnCallout: TJclRegExCallout;
@@ -1188,7 +1185,7 @@ begin
   PCRECheck(pcre16_fullinfo(FCode, FExtra, PCRE_INFO_NAMETABLE, @NameTable), SupportsWideChar);
   PCRECheck(pcre16_fullinfo(FCode, FExtra, PCRE_INFO_NAMEENTRYSIZE, @EntrySize), SupportsWideChar);
 
-  NameTable := NameTable + EntrySize * Index + 2;
+  NameTable := NameTable + EntrySize * Index + 1;
   Result := DecodeWideString(WideString(NameTable), roUTF16 in Options);
 end;
 
