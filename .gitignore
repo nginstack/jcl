@@ -2,4 +2,5 @@
 **/backup/*.pas
 **/backup/*.dpr
 **/backup/*.lpi
+**/backup/*.bak
 __history

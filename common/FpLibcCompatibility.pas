@@ -99,7 +99,7 @@ end;
 
 Function tolower(c : Byte) : Integer;
 begin
-  Result := Integer(lowerCase(AnsiChar(c))[1]);
+  Result := Integer(lowerCase(AnsiChar(c)));
 end;
 
 Function toupper(c : Byte) : Integer;

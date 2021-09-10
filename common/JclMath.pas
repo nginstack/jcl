@@ -4672,6 +4672,7 @@ end;
 
 function TRectComplex.IsInfinite: Boolean;
 begin
+{$IFDEF MSWINDOWS}
   {$IFDEF DELPHI64_TEMPORARY}
   //IsInfinite is disabled for 64-bit, because BASM is not 64-bit compatible (see logmessage of public repo @3070)
   System.Error(rePlatformNotImplemented);
@@ -4679,6 +4680,10 @@ begin
   {$ELSE ~DELPHI64_TEMPORARY}
   Result := JclMath.IsInfinite(Self);
   {$ENDIF ~DELPHI64_TEMPORARY}
+{$ELSE}
+  System.Error(reInvalidOp);
+  Result := False;
+{$ENDIF}
 end;
 
 { TPolarComplex }
@@ -4767,13 +4772,18 @@ end;
 
 function TPolarComplex.IsInfinite: Boolean;
 begin
-  {$IFDEF DELPHI64_TEMPORARY}
-  //IsInfinite is disabled for 64-bit, because BASM is not 64-bit compatible (see logmessage of public repo @3070)
-  System.Error(rePlatformNotImplemented);
-  Result := False;
-  {$ELSE ~DELPHI64_TEMPORARY}
-  Result := JclMath.IsInfinite(Self);
-  {$ENDIF ~DELPHI64_TEMPORARY}
+  {$IFDEF MSWINDOWS}
+    {$IFDEF DELPHI64_TEMPORARY}
+    //IsInfinite is disabled for 64-bit, because BASM is not 64-bit compatible (see logmessage of public repo @3070)
+    System.Error(rePlatformNotImplemented);
+    Result := False;
+    {$ELSE ~DELPHI64_TEMPORARY}
+    Result := JclMath.IsInfinite(Self);
+    {$ENDIF ~DELPHI64_TEMPORARY}
+  {$ELSE}
+    System.Error(reInvalidOp);
+    Result := False;
+  {$ENDIF}
 end;
 
 function TPolarComplex.Power(const Exponent: TRectComplex): TPolarComplex;

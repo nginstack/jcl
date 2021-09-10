@@ -635,28 +635,6 @@ type
 const
   AnsiStrRecSize  = SizeOf(TAnsiStrRec);     // size of the AnsiString header rec
 
-{$IFDEF LINUX}
-function IsXDigit(character: AnsiChar): boolean;
-begin
- Result := (character in ['0'..'9']) or (character in ['A'..'F']) or (character in ['a'..'f']);
-end;
-
-function IsSpace(character: AnsiChar): boolean;
-const
-  SpaceCharacters = [$9, $a, $b, $c, $d, $20, $a0];
-begin
-  Result := Byte(character) in SpaceCharacters;
-end;
-
-function IsBlank(character: AnsiChar): boolean;
-const
-  BlankCharacters = [$9, $20, $a0];
-begin
-  Result := Byte(character) in BlankCharacters;
-end;
-{$ENDIF LINUX}
-
-
 procedure LoadCharTypes;
 var
   CurrChar: AnsiChar;
