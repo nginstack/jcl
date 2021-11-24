@@ -621,13 +621,24 @@ type
     Length: Integer;
   end;
 {$ELSE ~DCC}
+  // FreePascal 3.3.1 and later
+  // See the source for more details: https://gitlab.com/freepascal.org/fpc/source/-/blob/main/rtl/inc/astrings.inc
   TAnsiStrRec = record
     CodePage: TSystemCodePage;
     ElementSize: Word;
-{$IFDEF CPU64}
-    Dummy: DWord;
-{$ENDIF CPU64}
+{$IF NOT DEFINED(VER3_0) AND NOT DEFINED(VER3_2)}
+  {$IFDEF CPU64}
+    RefCount: Longint;
+  {$ELSE}
     RefCount: SizeInt;
+  {$ENDIF}
+{$ELSE}
+  {$IFDEF CPU64}
+    { align fields  }
+    Dummy: DWord;
+  {$ENDIF CPU64}
+    RefCount: SizeInt;
+{$ENDIF}
     Length: SizeInt;
   end;
 {$ENDIF ~DCC}
