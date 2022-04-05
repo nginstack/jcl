@@ -1520,11 +1520,6 @@ begin
     Result := '';
 end;
 
-//----------------------------------------------------------------------------
-
-{$ENDIF MSWINDOWS}
-{$ENDIF FPC}
-
 //=== Registry helpers =======================================================
 
 const
@@ -1584,6 +1579,11 @@ function ReadWindowsNTCurrentVersionIntegerValue(const Name: string; Def: Intege
 begin
   Result := RegReadHklmKeyIntegerValue(HKLM_CURRENT_VERSION_NT, Name, Def, ForceNative);
 end;
+
+//----------------------------------------------------------------------------
+
+{$ENDIF MSWINDOWS}
+{$ENDIF FPC}
 
 //=== Environment ============================================================
 
