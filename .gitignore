@@ -4,3 +4,4 @@
 **/backup/*.lpi
 **/backup/*.bak
 __history
+*.~*
