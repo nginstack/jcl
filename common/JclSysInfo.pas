@@ -1520,6 +1520,13 @@ begin
     Result := '';
 end;
 
+//----------------------------------------------------------------------------
+
+{$ENDIF MSWINDOWS}
+{$ENDIF FPC}
+
+{$IFDEF MSWINDOWS}
+
 //=== Registry helpers =======================================================
 
 const
@@ -1580,10 +1587,7 @@ begin
   Result := RegReadHklmKeyIntegerValue(HKLM_CURRENT_VERSION_NT, Name, Def, ForceNative);
 end;
 
-//----------------------------------------------------------------------------
-
 {$ENDIF MSWINDOWS}
-{$ENDIF FPC}
 
 //=== Environment ============================================================
 
