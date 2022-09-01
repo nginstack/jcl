@@ -80,6 +80,9 @@ uses
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
   {$ENDIF ~HAS_UNITSCOPE}
+  {$IFDEF LINUX}
+  charset,
+  {$ENDIF LINUX}
   JclBase;
 
 // Ansi types
@@ -690,7 +693,15 @@ end;
 procedure LoadCaseMap;
 var
   CurrChar, UpCaseChar, LoCaseChar, ReCaseChar: AnsiChar;
+{$IFDEF LINUX}
+  CurrUnicode, UpCaseUnicode, LoCaseUnicode: WideChar;
+  CodeMap: PUnicodeMap;
+  code: tunicodechar;
+{$ENDIF}
 begin
+  {$IFDEF LINUX}
+  CodeMap := charset.getmap(1252); // Default Windows CodePage
+  {$ENDIF}
   if not AnsiCaseMapReady then
   begin
     for CurrChar := Low(AnsiChar) to High(AnsiChar) do
@@ -703,12 +714,33 @@ begin
       {$DEFINE CASE_MAP_INITIALIZED}
       {$ENDIF MSWINDOWS}
       {$IFDEF LINUX}
-      LoCaseChar := AnsiChar(tolower(Byte(CurrChar)));
-      UpCaseChar := AnsiChar(toupper(Byte(CurrChar)));
+      if Ord(CurrChar) >= $80 then
+      begin
+        // Chars with accent requires be converted to Unicode,
+        // before change the case
+        code := charset.getunicode(CurrChar, CodeMap);
+        if code <> $FFFF then // Check if it's a valid unicode
+        begin
+          CurrUnicode := WideChar(code);
+          UpCaseUnicode := UpCase(CurrUnicode);
+          LoCaseUnicode := LowerCase(CurrUnicode);
+          charset.getascii(Ord(UpCaseUnicode), CodeMap, @UpCaseChar, 1);
+          charset.getascii(Ord(LoCaseUnicode), CodeMap, @LoCaseChar, 1);
+        end else
+        begin
+          UpCaseChar := CurrChar;
+          LoCaseChar := CurrChar;
+        end;
+      end else
+      begin
+        LoCaseChar := LowerCase(CurrChar);
+        UpCaseChar := UpCase(CurrChar);
+      end;
       {$DEFINE CASE_MAP_INITIALIZED}
       {$ENDIF LINUX}
+
       {$IFNDEF CASE_MAP_INITIALIZED}
-      Implement case map initialization here
+      {$MESSAGE Error "Implement case map initialization here"}
       {$ENDIF ~CASE_MAP_INITIALIZED}
       if CharIsUpper(CurrChar) then
         ReCaseChar := LoCaseChar
