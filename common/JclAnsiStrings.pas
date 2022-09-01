@@ -3437,11 +3437,13 @@ begin
 end;
 
 function CharPos(const S: AnsiString; const C: AnsiChar; const Index: SizeInt): SizeInt;
+var
+  I: Integer;
 begin
   if (Index > 0) and (Index <= Length(S)) then
-    for Result := Index to Length(S) do
-      if S[Result] = C then
-        Exit;
+    for I := Index to Length(S) do
+      if S[I] = C then
+        Exit(I);
   Result := 0;
 end;
 
