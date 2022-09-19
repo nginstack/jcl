@@ -1,6 +1,6 @@
 # JCL
 
-**Versão atual:** commit 15d8a179a289e3fbcd37ea894c512b6efeaa2c82 do branch **master** de 21/02/2022. 
+**Versão atual:** commit 339c1fefe43f3ebd43a3351a615b2ad428719613 do branch **master** de 22/07/2022. 
 
 Observar que a JCL em si não é compatível com o FreePascal e no passado foi criado este fork
 que foi sendo gradualmente modificado para tornar compatível. Essa abordagem tornou possível a 
@@ -13,6 +13,10 @@ pull request https://github.com/project-jedi/jcl/pull/41 tenta integrar essas al
 no repositório do jcl. Deste repositório, aproveitamos o arquivo common/FpLibcCompatibility.pas.
 
 ### Passos para atualizar a JCL
+
+Atualmente o JCL recebe poucas atualizações, portanto a maneira mais fácil de atualizar os fontes
+é realizando um patch manual do último commit sincronizado até a versão atual do projeto. Caso o 
+JCL passe por uma modificação mais significativa, devem ser realizados os passos abaixo:
 
 1. Execute o instalador do JCL (install.bat). Em cada aba associada a versão do Delphi:
 
