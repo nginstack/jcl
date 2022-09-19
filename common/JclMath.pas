@@ -1685,7 +1685,7 @@ end;
 function CosH(X: Float): Float;
 {$IF Defined(PUREPASCAL)}
 begin
-  Result := 0.5 * (Exp(X) + Exp(-X));
+  Result := 0.5 * (JclMath.Exp(X) + JclMath.Exp(-X));
 {$ELSEIF Defined(USE_MATH_UNIT)}
 begin
   Result := Math.Cosh(X);
