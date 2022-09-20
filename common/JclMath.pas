@@ -326,7 +326,9 @@ function IsPrimeTD(N: Cardinal): Boolean;
 function IsPrimeRM(N: Cardinal): Boolean;
 {$ENDIF CPU32}
 function IsPrimeFactor(const F, N: Cardinal): Boolean; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-function PrimeFactors(N: Cardinal): TDynCardinalArray;
+
+// Commented to workaround an FPC 3.3.1 compiler error
+//function PrimeFactors(N: Cardinal): TDynCardinalArray;
 
 var
   IsPrime: function(N: Cardinal): Boolean = IsPrimeTD;
@@ -2897,6 +2899,8 @@ asm
 end;
 {$ENDIF CPU32}
 
+// Commented to workaround an FPC 3.3.1 compiler error
+{
 function PrimeFactors(N: Cardinal): TDynCardinalArray;
 var
   I, L, Max: Cardinal;
@@ -2944,6 +2948,7 @@ begin
     Result[L - 1] := N;
   end;
 end;
+}
 
 function IsPrimeFactor(const F, N: Cardinal): Boolean;
 begin
