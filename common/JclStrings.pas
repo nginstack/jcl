@@ -3972,7 +3972,7 @@ var
     V := Args[Index];
     if (V.VInteger = 0) and
       (V.VType in [vtExtended, vtString, vtObject, vtClass, vtCurrency,
-      vtInterface, vtInt64]) then
+      vtInterface, vtInt64{$IFDEF FPC}, vtQWord{$ENDIF}]) then
       raise ArgumentNullException.CreateResFmt(@RsArgumentIsNull, [Index]);
 
     case V.VType of
@@ -4029,10 +4029,14 @@ var
         Result := WideString(V.VWideString);
       vtInt64:
         Result := IntToStr(V.VInt64^);
-      {$IFDEF SUPPORTS_UNICODE_STRING}
+{$IFDEF FPC}
+      vtQWord:
+        Result := IntToStr(V.VQWord^);
+{$ENDIF}
+{$IFDEF SUPPORTS_UNICODE_STRING}
       vtUnicodeString:
         Result := UnicodeString(V.VUnicodeString);
-      {$ENDIF SUPPORTS_UNICODE_STRING}
+{$ENDIF SUPPORTS_UNICODE_STRING}
     else
       raise ArgumentNullException.CreateResFmt(@RsDotNetFormatArgumentNotSupported, [Index]);
     end;

@@ -539,10 +539,14 @@ begin
           Add(string(A[I].VVariant^));
         vtInt64:
           Add(IntToStr(A[I].VInt64^));
-        {$IFDEF SUPPORTS_UNICODE_STRING}
+{$IFDEF FPC}
+        vtQWord:
+          Add(IntToStr(A[I].VQWord^));
+{$ENDIF}
+{$IFDEF SUPPORTS_UNICODE_STRING}
         vtUnicodeString:
           Add(string(A[I].VUnicodeString));
-        {$ENDIF SUPPORTS_UNICODE_STRING}
+{$ENDIF SUPPORTS_UNICODE_STRING}
       end;
   finally
     Result := EndUpdate;
