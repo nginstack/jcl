@@ -854,7 +854,7 @@ begin
   if Dest is TJclAnsiStrings then
   begin
     AnsiStringsDest := TJclAnsiStrings(Dest);
-    BeginUpdate;
+    AnsiStringsDest.BeginUpdate;
     try
       AnsiStringsDest.Clear;
       AnsiStringsDest.FNameValueSeparator := FNameValueSeparator;
@@ -862,7 +862,7 @@ begin
       for I := 0 to Count - 1 do
         AnsiStringsDest.AddObject(Strings[I], Objects[I]);
     finally
-      EndUpdate;
+      AnsiStringsDest.EndUpdate;
     end;
   end
   else
