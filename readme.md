@@ -1,6 +1,7 @@
 # JCL
 
-**Versão atual:** commit c774ad9ec6691abf9fd83c8cc1f0814a75225849 do branch **master** de 14/10/2022. 
+**Versão atual:** commit c08ea8e62a46b900cded9548aa9b49ee19eadff4 do branch **master** de 
+12/11/2023.
 
 Observar que a JCL em si não é compatível com o FreePascal e no passado foi criado este fork
 que foi sendo gradualmente modificado para tornar compatível. Essa abordagem tornou possível a 
@@ -40,7 +41,11 @@ JCL passe por uma modificação mais significativa, devem ser realizados os pass
 	* jcl\windows\obj (o objetivo é garantir que a ZLIB não será embarcada estaticamente)
 	* jcl\include\jedi\.git
 
-4. Revisar cada arquivo alterado para não desfazer modificações necessárias para o suporte ao FPC
+4. Remova os arquivos:
+    * jcl\vcl\JclGraphics.pas
+    * jcl\vcl\JclGraphUtils.pas
+
+5. Revisar cada arquivo alterado para não desfazer modificações necessárias para o suporte ao FPC
 ou Linux. Ter atenção especial com os seguintes arquivos:
    
    * JclAbstractContainers: seUTF8 => TJclAnsiStrEncoding.seUTF8.
