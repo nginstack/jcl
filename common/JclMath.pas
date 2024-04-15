@@ -112,14 +112,14 @@ const
   {$IFDEF MATH_DOUBLE_PRECISION}
   MaxTanH: Float = 354.89135644669199842162284618659; // Ln(2^1024)/2
   MaxFactorial   = 170;
-  MaxFloatingPoint: Float = MAXDOUBLE; // 2^1024
-  MinFloatingPoint: Float = MINDOUBLE; // 2^(-1022)
+  MaxFloatingPoint: Float = System.Math.MAXDOUBLE; // 2^1024
+  MinFloatingPoint: Float = System.Math.MINDOUBLE; // 2^(-1022)
   {$ENDIF MATH_DOUBLE_PRECISION}
   {$IFDEF MATH_SINGLE_PRECISION}
   MaxTanH: Float = 44.361419555836499802702855773323; // Ln(2^128)/2
   MaxFactorial   = 33;
-  MaxFloatingPoint: Float = MAXFLOAT; // 2^128
-  MinFloatingPoint: Float = MINFLOAT; // 2^(-126)
+  MaxFloatingPoint: Float = System.Math.MAXFLOAT; // 2^128
+  MinFloatingPoint: Float = System.Math.MINFLOAT; // 2^(-126)
   {$ENDIF MATH_SINGLE_PRECISION}
 
 const
