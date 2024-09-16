@@ -1167,10 +1167,6 @@ resourcestring
   RsEAssignError           = 'Assignation error';
   RsEReadOnlyError         = 'Container is read-only';
 
-//=== JclCounter =============================================================
-resourcestring
-  RsNoCounter = 'No high performance counters supported';
-
 //=== JclDateTime ============================================================
 resourcestring
   RsMakeUTCTime    = 'Error converting to UTC time. Time zone could not be determined';
@@ -1187,20 +1183,6 @@ resourcestring
 //=== JclDotNet ==============================================================
 resourcestring
   RsEUnknownCLRVersion = '"%s" is not a known CLR version';
-
-//=== JclExprEval ============================================================
-resourcestring
-  RsExprEvalRParenExpected = 'Parse error: '')'' expected';
-  RsExprEvalFactorExpected = 'Parse error: Factor expected';
-  RsExprEvalUnknownSymbol  = 'Parse error: Unknown symbol: ''%s''';
-
-  RsExprEvalFirstArg = 'Parse error: ''('' and function''s first parameter expected';
-  RsExprEvalNextArg  = 'Parse error: '','' and another parameter expected';
-  RsExprEvalEndArgs  = 'Parse error: '')'' to close function''s parameters expected';
-
-  RsExprEvalExprNotFound          = 'Expression compiler error: Expression ''%s'' not found';
-  RsExprEvalExprPtrNotFound       = 'Expression compiler error: Expression pointer not found';
-  RsExprEvalExprRefCountAssertion = 'Expression compiler error: expression refcount < 0';
 
 //=== JclFileUtils ===========================================================
 resourcestring
@@ -1363,35 +1345,6 @@ resourcestring
   RsPowerInfinite      = 'Power function: Result is infinite';
   RsPowerComplex       = 'Power function: Result is complex';
 
-//=== JclMetadata ============================================================
-resourcestring
-  RsUnknownClassLayout      = 'Unknown class layout - $%.8x';
-  RsUnknownStringFormatting = 'Unknown string formatting - $%.8x';
-  RsInvalidSignatureData    = 'Invalid compressed signature data - %.2x %.2x %.2x %.2x';
-  RsUnknownManifestResource = 'Unknown manifest resource visibility - %d';
-  RsNoLocalVarSig           = 'Signature %s is not LocalVarSig';
-  RsLocalVarSigOutOfRange   = 'LocalVarSig count %d is out of range [1..$$FFFE]';
-
-//=== JclMIDI ================================================================
-resourcestring
-  RsOctaveC      = 'C';
-  RsOctaveCSharp = 'C#';
-  RsOctaveD      = 'D';
-  RsOctaveDSharp = 'D#';
-  RsOctaveE      = 'E';
-  RsOctaveF      = 'F';
-  RsOctaveFSharp = 'F#';
-  RsOctaveG      = 'G';
-  RsOctaveGSharp = 'G#';
-  RsOctaveA      = 'A';
-  RsOctaveASharp = 'A#';
-  RsOctaveB      = 'B';
-
-  RsMidiInvalidChannelNum = 'Invalid MIDI channel number (%d)';
-  {$IFDEF UNIX}
-  RsMidiNotImplemented    = 'JclMidi: MIDI I/O for Unix not (yet) implemented';
-  {$ENDIF UNIX}
-
 //=== JclMiscel ==============================================================
 resourcestring
   // CreateProcAsUser
@@ -1449,13 +1402,6 @@ resourcestring
   RsMMCdTimeFormat     = '%2u:%.2u';
   RsMMTrackAudio       = 'Audio';
   RsMMTrackOther       = 'Other';
-
-//=== JclNTFS ================================================================
-resourcestring
-  RsInvalidArgument = '%s: Invalid argument <%s>';
-  RsNtfsUnableToDeleteSymbolicLink = 'Unable to delete temporary symbolic link';
-  RsEUnableToCreatePropertyStorage = 'Unable to create property storage';
-  RsEIncomatibleDataFormat = 'Incompatible data format';
 
 //=== JclPCRE ================================================================
 resourcestring
@@ -1763,10 +1709,6 @@ resourcestring
   RsEInvalidMSOUnexpectedEndOfDat = 'Invalid MSO: Unexpected end of data at position %d';
   RsEInvalidDocumentUnexpectedTextInFile = 'Invalid Document: Unexpected text in file prolog at position %d';
 
-//=== JclStatistics ==========================================================
-resourcestring
-  RsInvalidSampleSize = 'Invalid sample size (%d)';
-
 //=== JclStreams =============================================================
 resourcestring
   RsStreamsCreateError = 'Cannot create file %s';
@@ -1799,10 +1741,6 @@ resourcestring
   RsTabs_TabWidthExpected = 'Tab width expected.';
   // Default text for the NullReferenceException in .NET
   RsArg_NullReferenceException = 'Object reference not set to an instance of an object.';
-
-//=== JclStructStorage =======================================================
-resourcestring
-  RsIStreamNil = 'IStream is nil';
 
 //=== JclSynch ===============================================================
 resourcestring
@@ -2065,10 +2003,6 @@ resourcestring
   RsCombiningClassUnicodeChar = 'combining class for Unicode character > $FFFFFF found';
   RsEUnexpectedEOSeq          = 'Unexpected end of sequence';
 
-//=== JclUnitConv ============================================================
-resourcestring
-  RsTempConvTypeError = 'An invalid type has been provided for the %s parameter';
-  RsConvTempBelowAbsoluteZero = 'Temperature can not be below Absolute Zero!';
 
 //=== JclWin32 ===============================================================
 resourcestring
