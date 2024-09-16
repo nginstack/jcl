@@ -323,7 +323,7 @@ function NearestHigherMultiple(Num, Multiplicator: Int64): Int64; overload;
 ///   Get the next multiple of a given multiplicator which is higher than
 ///   the number given. Example: Num = 21, Multiplicator = 5, Result is 25
 /// </summary>
-function NearestHigherMultiple(Num: Float; Multiplicator: Integer): Integer; overload
+function NearestHigherMultiple(Num: Float; Multiplicator: Integer): Integer; overload;
 /// <summary>
 ///   Get the next multiple of a given multiplicator which is higher than
 ///   the number given. Example: Num = 21, Multiplicator = 5, Result is 25
