@@ -89,6 +89,12 @@ type
 
   PFloat = ^Float;
 
+{$IFDEF RTL360_UP}
+  TListIndexType = NativeInt;
+{$ELSE}
+  TListIndexType = Integer;
+{$ENDIF}
+
 type
   {$IFDEF FPC}
   Largeint = Int64;
