@@ -89,12 +89,6 @@ type
 
   PFloat = ^Float;
 
-{$IFDEF RTL360_UP}
-  TListIndexType = NativeInt;
-{$ELSE}
-  TListIndexType = Integer;
-{$ENDIF}
-
 type
   {$IFDEF FPC}
   Largeint = Int64;
@@ -142,6 +136,13 @@ type
 type
   TBytes = array of Byte;
 {$ENDIF ~COMPILER11_UP}
+
+type
+  {$IFDEF RTL360_UP}
+  TJclListSize = NativeInt;
+  {$ELSE}
+  TJclListSize = Integer;
+  {$ENDIF ~RTL360_UP}
 
 // Redefinition of PByteArray to avoid range check exceptions.
 type
