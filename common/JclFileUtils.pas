@@ -4307,7 +4307,6 @@ var
   FileAttributesEx: WIN32_FILE_ATTRIBUTE_DATA;
   Size: TJclULargeInteger;
 begin
-  Result := 0;
   if GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @FileAttributesEx) then
   begin
     Size.LowPart := FileAttributesEx.nFileSizeLow;
