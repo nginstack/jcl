@@ -5577,7 +5577,6 @@ var
   TBI: THREAD_BASIC_INFORMATION;
   ReturnedLength: ULONG;
 begin
-  Result := 0;
   ReturnedLength := 0;
   if (NtQueryInformationThread(ThreadHandle, ThreadBasicInformation, @TBI, SizeOf(TBI), @ReturnedLength) < $80000000) and
      (ReturnedLength = SizeOf(TBI)) then
