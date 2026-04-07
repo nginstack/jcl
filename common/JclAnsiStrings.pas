@@ -88,7 +88,6 @@ uses
 // Ansi types
 
 type
-  {$IFDEF SUPPORTS_UNICODE}
   TJclAnsiStringList = class;
 
   // Codegear should be the one providing this class, in the AnsiStrings unit.
@@ -226,10 +225,6 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnChanging: TNotifyEvent read FOnChanging write FOnChanging;
   end;
-  {$ELSE ~SUPPORTS_UNICODE}
-  TJclAnsiStrings = Classes.TStrings;
-  TJclAnsiStringList = Classes.TStringList;
-  {$ENDIF ~SUPPORTS_UNICODE}
 
   TAnsiStrings = TJclAnsiStrings;
   TAnsiStringList = TJclAnsiStringList;
@@ -600,7 +595,6 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
-  {$IFDEF SUPPORTS_UNICODE}
   {$IFDEF HAS_UNIT_RTLCONSTS}
   {$IFDEF HAS_UNITSCOPE}
   System.RTLConsts,
@@ -608,7 +602,6 @@ uses
   RtlConsts,
   {$ENDIF}
   {$ENDIF HAS_UNIT_RTLCONSTS}
-  {$ENDIF SUPPORTS_UNICODE}
   {$IFDEF FPC}
   Character, FpLibcCompatibility, 
   {$ENDIF}
@@ -793,7 +786,6 @@ begin
   end;
 end;
 
-{$IFDEF SUPPORTS_UNICODE}
 
 //=== { TJclAnsiStrings } ====================================================
 
@@ -1522,7 +1514,6 @@ begin
   end;
 end;
 
-{$ENDIF SUPPORTS_UNICODE}
 
 // String Test Routines
 function StrIsAlpha(const S: AnsiString): Boolean;
