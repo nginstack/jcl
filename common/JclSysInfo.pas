@@ -127,110 +127,13 @@ function GetWindowsFolder: string;
 function GetWindowsSystemFolder: string;
 function GetWindowsTempFolder: string;
 
-function GetDesktopFolder: string;
-function GetProgramsFolder: string;
-{$ENDIF MSWINDOWS}
-function GetPersonalFolder: string;
-{$IFDEF MSWINDOWS}
-function GetFavoritesFolder: string;
-function GetStartupFolder: string;
-function GetRecentFolder: string;
-function GetSendToFolder: string;
-function GetStartmenuFolder: string;
-function GetDesktopDirectoryFolder: string;
-function GetCommonDocumentsFolder: string;
-function GetNethoodFolder: string;
-function GetFontsFolder: string;
-function GetCommonStartmenuFolder: string;
-function GetCommonStartupFolder: string;
-function GetPrinthoodFolder: string;
-function GetProfileFolder: string;
-function GetCommonProgramsFolder: string;
-function GetCommonDesktopdirectoryFolder: string;
-function GetCommonAppdataFolder: string;
-function GetAppdataFolder: string;
-function GetLocalAppData: string;
-function GetCommonFavoritesFolder: string;
-function GetTemplatesFolder: string;
-function GetInternetCacheFolder: string;
-function GetCookiesFolder: string;
-function GetHistoryFolder: string;
-
-// Advanced Power Management (APM)
-type
-  TAPMLineStatus = (alsOffline, alsOnline, alsUnknown);
-  TAPMBatteryFlag = (abfHigh, abfLow, abfCritical, abfCharging, abfNoBattery, abfUnknown);
-  TAPMBatteryFlags = set of TAPMBatteryFlag;
-
-function GetAPMLineStatus: TAPMLineStatus;
-function GetAPMBatteryFlag: TAPMBatteryFlag;
-function GetAPMBatteryFlags: TAPMBatteryFlags;
-function GetAPMBatteryLifePercent: Integer;
-function GetAPMBatteryLifeTime: DWORD;
-function GetAPMBatteryFullLifeTime: DWORD;
-
-// Identification
-type
-  TFileSystemFlag =
-   (
-    fsCaseSensitive,            // The file system supports case-sensitive file names.
-    fsCasePreservedNames,       // The file system preserves the case of file names when it places a name on disk.
-    fsSupportsUnicodeOnDisk,    // The file system supports Unicode in file names as they appear on disk.
-    fsPersistentACLs,           // The file system preserves and enforces ACLs. For example, NTFS preserves and enforces ACLs, and FAT does not.
-    fsSupportsFileCompression,  // The file system supports file-based compression.
-    fsSupportsVolumeQuotas,     // The file system supports disk quotas.
-    fsSupportsSparseFiles,      // The file system supports sparse files.
-    fsSupportsReparsePoints,    // The file system supports reparse points.
-    fsSupportsRemoteStorage,    // ?
-    fsVolumeIsCompressed,       // The specified volume is a compressed volume; for example, a DoubleSpace volume.
-    fsSupportsObjectIds,        // The file system supports object identifiers.
-    fsSupportsEncryption,       // The file system supports the Encrypted File System (EFS).
-    fsSupportsNamedStreams,     // The file system supports named streams.
-    fsVolumeIsReadOnly          // The specified volume is read-only.
-                                // Windows 2000/NT and Windows Me/98/95:  This value is not supported.
-   );
-
-  TFileSystemFlags = set of TFileSystemFlag;
-
-function GetVolumeName(const Drive: string): string;
-function GetVolumeSerialNumber(const Drive: string): string;
-function GetVolumeFileSystem(const Drive: string): string;
-function GetVolumeFileSystemFlags(const Volume: string): TFileSystemFlags;
-function GetIPAddress(const HostName: string): string;
-procedure GetIpAddresses(Results: TStrings; const HostName: AnsiString); overload;
-procedure GetIpAddresses(Results: TStrings); overload;
-{$ENDIF MSWINDOWS}
-{$IFDEF HAS_UNIT_LIBC}
-procedure GetIpAddresses(Results: TStrings; const HostName: AnsiString); overload;
-procedure GetIpAddresses(Results: TStrings); overload;
-{$ENDIF HAS_UNIT_LIBC}
-function GetLocalUserName: string;
-function GetLocalComputerName: string;
-{$IFDEF MSWINDOWS}
-function GetUserDomainName(const CurUser: string): string;
-function GetWorkGroupName: WideString;
-{$ENDIF MSWINDOWS}
-function GetDomainName: string;
-{$IFDEF MSWINDOWS}
-function GetRegisteredCompany: string;
-function GetRegisteredOwner: string;
-function GetWindowsProductId: string;
-function GetBIOSName: string;
-function GetBIOSCopyright: string;
-function GetBIOSExtendedInfo: string;
-function GetBIOSDate: TDateTime;
 {$ENDIF MSWINDOWS}
 
 // Processes, Tasks and Modules
 type
   TJclTerminateAppResult = (taError, taClean, taKill);
 
-{$IFDEF HAS_UNIT_LIBC}
-function RunningProcessesList(const List: TStrings; FullPath: Boolean = True): Boolean;
-{$ENDIF HAS_UNIT_LIBC}
-
 {$IFDEF MSWINDOWS}
-function RunningProcessesList(const List: TStrings; FullPath: Boolean = True): Boolean;
 function LoadedModulesList(const List: TStrings; ProcessID: DWORD; HandlesOnly: Boolean = False): Boolean;
 function GetTasksList(const List: TStrings): Boolean;
 
@@ -251,18 +154,6 @@ function TerminateApp(ProcessID: DWORD; Timeout: Integer): TJclTerminateAppResul
 {$ENDIF MSWINDOWS}
 
 {$IFDEF MSWINDOWS}
-{.$IFNDEF FPC}
-function GetPidFromProcessName(const ProcessName: string): THandle;
-function GetProcessNameFromWnd(Wnd: THandle): string;
-function GetProcessNameFromPid(PID: DWORD): string;
-function GetMainAppWndFromPid(PID: DWORD): THandle;
-function GetWndFromPid(PID: DWORD; const WindowClassName: string): HWND;
-{.$ENDIF ~FPC}
-
-function GetShellProcessName: string;
-{.$IFNDEF FPC}
-function GetShellProcessHandle: THandle;
-{.$ENDIF ~FPC}
 
 // Version Information
 type
@@ -344,7 +235,7 @@ const
   PROCESSOR_ARCHITECTURE_ARM64 = 12;
   {$EXTERNALSYM PROCESSOR_ARCHITECTURE_ARM64}
   PROCESSOR_ARCHITECTURE_UNKNOWN = $FFFF;
-  {$EXTERNALSYM PROCESSOR_ARCHITECTURE_UNKNOWN}  
+  {$EXTERNALSYM PROCESSOR_ARCHITECTURE_UNKNOWN}
 
 const
   Windows11InitialBuildNumber = 22000;
@@ -1428,19 +1319,6 @@ function GetFreeSystemResources(const ResourceType: TFreeSysResKind): Integer; o
 function GetFreeSystemResources: TFreeSystemResources; overload;
 function GetBPP: Cardinal;
 
-// Installed programs information
-function ProgIDExists(const ProgID: string): Boolean;
-function IsWordInstalled: Boolean;
-function IsExcelInstalled: Boolean;
-function IsAccessInstalled: Boolean;
-function IsPowerPointInstalled: Boolean;
-function IsFrontPageInstalled: Boolean;
-function IsOutlookInstalled: Boolean;
-function IsInternetExplorerInstalled: Boolean;
-function IsMSProjectInstalled: Boolean;
-function IsOpenOfficeInstalled: Boolean;
-function IsLibreOfficeInstalled: Boolean;
-
 {$ENDIF MSWINDOWS}
 
 // Public global variables
@@ -1472,7 +1350,6 @@ uses
   JwaTlHelp32, JwaPsApi,
   {$ELSE ~FPC}
   Winapi.TLHelp32, Winapi.PsApi,
-  JclShell,
   {$ENDIF ~FPC}
   JclRegistry, JclWin32,
   {$ENDIF MSWINDOWS}
@@ -1500,42 +1377,6 @@ uses
   {$ENDIF ~HAS_UNITSCOPE}
   Jcl8087, JclIniFiles,
   JclSysUtils, JclFileUtils, JclAnsiStrings, JclStrings;
-
-{$IFDEF FPC}
-{$IFDEF MSWINDOWS}
-
-function PidlToPath(IdList: PItemIdList): string;
-begin
-  SetLength(Result, MAX_PATH);
-  if SHGetPathFromIdList(IdList, PChar(Result)) then
-    StrResetLength(Result)
-  else
-    Result := '';
-end;
-
-//----------------------------------------------------------------------------
-
-function GetSpecialFolderLocation(const Folder: Integer): string;
-var
-  FolderPidl: PItemIdList;
-begin
-  FolderPidl := nil;
-  if Succeeded(SHGetSpecialFolderLocation(0, Folder, FolderPidl)) then
-  begin
-    try
-      Result := PidlToPath(FolderPidl);
-    finally
-      CoTaskMemFree(FolderPidl);
-    end;
-  end
-  else
-    Result := '';
-end;
-
-//----------------------------------------------------------------------------
-
-{$ENDIF MSWINDOWS}
-{$ENDIF FPC}
 
 {$IFDEF MSWINDOWS}
 
@@ -2051,909 +1892,37 @@ begin
   Result := PathRemoveSeparator(PathGetTempPath);
 end;
 
-function GetDesktopFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_DESKTOP);
-end;
-
-{ TODO : Check GetProgramsFolder = GetProgramFilesFolder }
-function GetProgramsFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_PROGRAMS);
-end;
-
-{$ENDIF MSWINDOWS}
-function GetPersonalFolder: string;
-begin
-  {$IFDEF UNIX}
-  Result := GetEnvironmentVariable('HOME');
-  {$ENDIF UNIX}
-  {$IFDEF MSWINDOWS}
-  Result := GetSpecialFolderLocation(CSIDL_PERSONAL);
-  {$ENDIF MSWINDOWS}
-end;
-
-{$IFDEF MSWINDOWS}
-function GetFavoritesFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_FAVORITES);
-end;
-
-function GetStartupFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_STARTUP);
-end;
-
-function GetRecentFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_RECENT);
-end;
-
-function GetSendToFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_SENDTO);
-end;
-
-function GetStartmenuFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_STARTMENU);
-end;
-
-function GetDesktopDirectoryFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_DESKTOPDIRECTORY);
-end;
-
-function GetCommonDocumentsFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_COMMON_DOCUMENTS);
-end;
-
-function GetNethoodFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_NETHOOD);
-end;
-
-function GetFontsFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_FONTS);
-end;
-
-function GetCommonStartmenuFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_COMMON_STARTMENU);
-end;
-
-function GetCommonProgramsFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_COMMON_PROGRAMS);
-end;
-
-function GetCommonStartupFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_COMMON_STARTUP);
-end;
-
-function GetCommonDesktopdirectoryFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_COMMON_DESKTOPDIRECTORY);
-end;
-
-function GetCommonAppdataFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_COMMON_APPDATA);
-end;
-
-function GetAppdataFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_APPDATA);
-end;
-
-function GetLocalAppData: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_LOCAL_APPDATA);
-end;
-
-function GetPrinthoodFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_PRINTHOOD);
-end;
-
-function GetCommonFavoritesFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_COMMON_FAVORITES);
-end;
-
-function GetTemplatesFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_TEMPLATES);
-end;
-
-function GetInternetCacheFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_INTERNET_CACHE);
-end;
-
-function GetCookiesFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_COOKIES);
-end;
-
-function GetHistoryFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_HISTORY);
-end;
-
-function GetProfileFolder: string;
-begin
-  Result := GetSpecialFolderLocation(CSIDL_PROFILE);
-end;
-
-// the following special folders are pure virtual and cannot be
-// mapped to a directory path:
-// CSIDL_INTERNET
-// CSIDL_CONTROLS
-// CSIDL_PRINTERS
-// CSIDL_BITBUCKET
-// CSIDL_DRIVES
-// CSIDL_NETWORK
-// CSIDL_ALTSTARTUP
-// CSIDL_COMMON_ALTSTARTUP
-
-// Identification
-type
-  TVolumeInfoKind = (vikName, vikSerial, vikFileSystem);
-
-function GetVolumeInfoHelper(const Drive: string; InfoKind: TVolumeInfoKind): string;
-var
-  VolumeSerialNumber: DWORD;
-  MaximumComponentLength: DWORD;
-  Flags: DWORD;
-  Name: array [0..MAX_PATH] of Char;
-  FileSystem: array [0..15] of Char;
-  ErrorMode: Cardinal;
-  DriveStr: string;
-begin
-  { TODO : Change to RootPath }
-  { TODO : Perform better checking of Drive param or document that no checking
-    is performed. RM Suggested:
-    DriveStr := Drive;
-    if (Length(Drive) < 2) or (Drive[2] <> ':') then
-      DriveStr := GetCurrentFolder;
-    DriveStr  := DriveStr[1] + ':\'; }
-  Result := '';
-  DriveStr := Drive + ':\';
-  ErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
-  try
-    Flags := 0;
-    MaximumComponentLength := 0;
-    if GetVolumeInformation(PChar(DriveStr), Name, Length(Name), @VolumeSerialNumber,
-      MaximumComponentLength, Flags, FileSystem, Length(FileSystem)) then
-    case InfoKind of
-      vikName:
-        Result := StrPas(Name);
-      vikSerial:
-        begin
-          Result := IntToHex(HiWord(VolumeSerialNumber), 4) + '-' +
-          IntToHex(LoWord(VolumeSerialNumber), 4);
-        end;
-      vikFileSystem:
-        Result := StrPas(FileSystem);
-    end;
-  finally
-    SetErrorMode(ErrorMode);
-  end;
-end;
-
-function GetVolumeName(const Drive: string): string;
-begin
-  Result := GetVolumeInfoHelper(Drive, vikName);
-end;
-
-function GetVolumeSerialNumber(const Drive: string): string;
-begin
-  Result := GetVolumeInfoHelper(Drive, vikSerial);
-end;
-
-function GetVolumeFileSystem(const Drive: string): string;
-begin
-  Result := GetVolumeInfoHelper(Drive, vikFileSystem);
-end;
-
-{ TODO -cHelp : Donator (incl. TFileSystemFlag[s]): Robert Rossmair }
-
-function GetVolumeFileSystemFlags(const Volume: string): TFileSystemFlags;
-const
-  FileSystemFlags: array [TFileSystemFlag] of DWORD =
-    ( FILE_CASE_SENSITIVE_SEARCH,   // fsCaseSensitive
-      FILE_CASE_PRESERVED_NAMES,    // fsCasePreservedNames
-      FILE_UNICODE_ON_DISK,         // fsSupportsUnicodeOnDisk
-      FILE_PERSISTENT_ACLS,         // fsPersistentACLs
-      FILE_FILE_COMPRESSION,        // fsSupportsFileCompression
-      FILE_VOLUME_QUOTAS,           // fsSupportsVolumeQuotas
-      FILE_SUPPORTS_SPARSE_FILES,   // fsSupportsSparseFiles
-      FILE_SUPPORTS_REPARSE_POINTS, // fsSupportsReparsePoints
-      FILE_SUPPORTS_REMOTE_STORAGE, // fsSupportsRemoteStorage
-      FILE_VOLUME_IS_COMPRESSED,    // fsVolumeIsCompressed
-      FILE_SUPPORTS_OBJECT_IDS,     // fsSupportsObjectIds
-      FILE_SUPPORTS_ENCRYPTION,     // fsSupportsEncryption
-      FILE_NAMED_STREAMS,           // fsSupportsNamedStreams
-      FILE_READ_ONLY_VOLUME         // fsVolumeIsReadOnly
-    );
-var
-  MaximumComponentLength, Flags: Cardinal;
-  Flag: TFileSystemFlag;
-begin
-  Flags := 0;
-  MaximumComponentLength := 0;
-  if not GetVolumeInformation(PChar(PathAddSeparator(Volume)), nil, 0, nil,
-    MaximumComponentLength, Flags, nil, 0) then
-    RaiseLastOSError;
-  Result := [];
-  for Flag := Low(TFileSystemFlag) to High(TFileSystemFlag) do
-    if (Flags and FileSystemFlags[Flag]) <> 0 then
-      Include(Result, Flag);
-end;
-
-{ TODO -cDoc: Contributor: twm }
-
-function GetIPAddress(const HostName: string): string;
-var
-  {$IFDEF MSWINDOWS}
-  R: Integer;
-  WSAData: TWSAData;
-  {$ENDIF MSWINDOWS}
-  HostEnt: PHostEnt;
-  Host: AnsiString;
-  SockAddr: TSockAddrIn;
-begin
-  Result := '';
-  {$IFDEF MSWINDOWS}
-  WSAData.wVersion := 0;
-  R := WSAStartup(MakeWord(1, 1), WSAData);
-  if R = 0 then
-    try
-  {$ENDIF MSWINDOWS}
-      Host := AnsiString(HostName);
-      if Host = '' then
-      begin
-        SetLength(Host, MAX_PATH);
-        GetHostName(PAnsiChar(Host), MAX_PATH);
-      end;
-      HostEnt := GetHostByName(PAnsiChar(Host));
-      if HostEnt <> nil then
-      begin
-        SockAddr.sin_addr.S_addr := Longint(PLongint(HostEnt^.h_addr_list^)^);
-        Result := string(AnsiString(inet_ntoa(SockAddr.sin_addr)));
-      end;
-    {$IFDEF MSWINDOWS}
-    finally
-      WSACleanup;
-    end;
-    {$ENDIF MSWINDOWS}
-end;
-
-{ TODO -cDoc: Donator: twm }
-
-procedure GetIpAddresses(Results: TStrings);
-begin
-  GetIpAddresses(Results, '');
-end;
-
-procedure GetIpAddresses(Results: TStrings; const HostName: AnsiString);
-type
-  TaPInAddr = array[0..10] of PInAddr;
-  PaPInAddr = ^TaPInAddr;
-var
-  R: Integer;
-  HostEnt: PHostEnt;
-  pptr: PaPInAddr;
-  Host: AnsiString;
-  i: Integer;
-  WSAData: TWSAData;
-begin
-  //need a socket for ioctl()
-  WSAData.wVersion := 0;
-  R := WSAStartup(MakeWord(1, 1), WSAData);
-  if R = 0 then begin
-    try
-      if HostName = '' then
-      begin
-        SetLength(Host, MAX_PATH);
-        GetHostName(PAnsiChar(Host), MAX_PATH);
-      end
-      else
-        Host := HostName;
-        
-      HostEnt := GetHostByName(PAnsiChar(Host));
-      if HostEnt <> nil then
-      begin
-        pPtr := PaPInAddr(HostEnt^.h_addr_list);
-        i := 0;
-        while pPtr^[I] <> nil do begin
-          Results.Add(string(AnsiString(inet_ntoa(pptr^[i]^)))); // OF AnsiString to TStrings
-          Inc(i);
-        end;
-      end;
-    finally
-      WSACleanup;
-    end;
-  end;
-end;
-{$ENDIF MSWINDOWS}
-
-{$IFDEF HAS_UNIT_LIBC}
-
-{ TODO -cDoc: Donator: twm, Contributor rrossmair }
-
-// Returns all IP addresses of the local machine in the form
-// <interface>=<IP-Address> (which allows for access to the interface names
-// by means of Results.Names and the addresses through Results.Values)
-//
-// Example:
-//
-// lo=127.0.0.1
-// eth0=10.10.10.1
-// ppp0=217.82.187.130
-//
-// note that this will append to Results!
-//
-
-procedure GetIpAddresses(Results: TStrings);
-var
-  Sock: Integer;
-  IfReq: TIfReq;
-  SockAddrPtr: PSockAddrIn;
-  ListSave, IfList: PIfNameIndex;
-begin
-  //need a socket for ioctl()
-  Sock := socket(AF_INET, SOCK_STREAM, 0);
-  if Sock < 0 then
-    RaiseLastOSError;
-
-  try
-    //returns pointer to dynamically allocated list of structs
-    ListSave := if_nameindex();
-    try
-      IfList := ListSave;
-      //walk thru the array returned and query for each
-      //interface's address
-      while IfList^.if_index <> 0 do
-      begin
-        //copy in the interface name to look up address of
-        {$IFDEF FPC}
-        strncpy(IfReq.ifr_ifrn.ifrn_name, IfList^.if_name, IFNAMSIZ);
-        {$ELSE ~FPC}
-        strncpy(IfReq.ifrn_name, IfList^.if_name, IFNAMSIZ);
-        {$ENDIF ~FPC}
-        //get the address for this interface
-        if ioctl(Sock, SIOCGIFADDR, @IfReq) <> 0 then
-          RaiseLastOSError;
-        //print out the address
-        {$IFDEF FPC}
-        SockAddrPtr := PSockAddrIn(@IfReq.ifr_ifru.ifru_addr);
-        Results.Add(Format('%s=%s', [IfReq.ifr_ifrn.ifrn_name, inet_ntoa(SockAddrPtr^.sin_addr)]));
-        {$ELSE ~FPC}
-        SockAddrPtr := PSockAddrIn(@IfReq.ifru_addr);
-        Results.Add(Format('%s=%s', [IfReq.ifrn_name, inet_ntoa(SockAddrPtr^.sin_addr)]));
-        {$ENDIF ~FPC}
-        Inc(IfList);
-      end;
-    finally
-      //free the dynamic memory kernel allocated for us
-      if_freenameindex(ListSave);
-    end;
-  finally
-    Libc.__close(Sock)
-  end;
-end;
-
-{$ENDIF HAS_UNIT_LIBC}
-
-function GetLocalComputerName: string;
-{$IFDEF LINUX}
-var
-  MachineInfo: utsname;
-begin
-  fpUname(MachineInfo);
-  Result := MachineInfo.nodename;
-end;
-{$ENDIF LINUX}
-{$IFDEF MSWINDOWS}
-var
-  Count: DWORD;
-  Buf: array[0..MAX_PATH] of Char;
-begin
-  Count := Length(Buf) - 1;
-  // GetComputerName can return a string larger than MAX_COMPUTERNAME_LENGTH which was the NetBios limit.
-  // The Windows 10 allows to enter 260 (MAX_PATH) chars computer name's field.
-  if GetComputerName(Buf, Count) then
-    SetString(Result, Buf, Count)
-  else
-    Result := '';
-end;
-{$ENDIF MSWINDOWS}
-
-function GetLocalUserName: string;
-{$IFDEF LINUX}
-begin
-  Result := GetEnvironmentVariable('USER');
-end;
-{$ENDIF}
-{$IFDEF MSWINDOWS}
-var
-  Count: DWORD;
-begin
-  Count := 256 + 1; // UNLEN + 1
-  // set buffer size to 256 + 2 characters
-  { TODO : Win2k solution }
-  SetLength(Result, Count);
-  if GetUserName(PChar(Result), Count) then
-    StrResetLength(Result)
-  else
-    Result := '';
-end;
-{$ENDIF MSWINDOWS}
-
-{$IFDEF MSWINDOWS}
-function GetRegisteredCompany: string;
-begin
-  { TODO : check for MSDN documentation }
-  if IsWinNT then
-    Result := ReadWindowsNTCurrentVersionStringValue('RegisteredOrganization', '', True)
-  else
-    Result := ReadWindowsCurrentVersionStringValue('RegisteredOrganization', '', True);
-end;
-
-function GetRegisteredOwner: string;
-begin
-  { TODO : check for MSDN documentation }
-  if IsWinNT then
-    Result := ReadWindowsNTCurrentVersionStringValue('RegisteredOwner', '', True)
-  else
-    Result := ReadWindowsCurrentVersionStringValue('RegisteredOwner', '', True);
-end;
-
-function GetWindowsProductId: string;
-begin
-  { TODO : check for MSDN documentation }
-  if IsWinNT then
-    Result := ReadWindowsNTCurrentVersionStringValue('ProductId', '', True)
-  else
-    Result := ReadWindowsCurrentVersionStringValue('ProductId', '', True);
-end;
-
-{ TODO: Check supported platforms, maybe complete rewrite }
-
-function GetUserDomainName(const CurUser: string): string;
-var
-  Count1, Count2: DWORD;
-  Sd: PSID; // PSecurityDescriptor; // FPC requires PSID
-  Snu: SID_Name_Use;
-begin
-  Count1 := 0;
-  Count2 := 0;
-  Sd := nil;
-  Snu := SIDTypeUser;
-  Result := '';
-  LookUpAccountName(nil, PChar(CurUser), Sd, Count1, PChar(Result), Count2, Snu);
-  // set buffer size to Count2 + 2 characters for safety
-  SetLength(Result, Count2 + 1);
-  Sd := AllocMem(Count1);
-  try
-    if LookUpAccountName(nil, PChar(CurUser), Sd, Count1, PChar(Result), Count2, Snu) then
-      StrResetLength(Result)
-    else
-      Result := EmptyStr;
-  finally
-    FreeMem(Sd);
-  end;
-end;
-
-function GetWorkGroupName: WideString;
-var
-  WkstaInfo: PByte;
-  WkstaInfo100: PWKSTA_INFO_100;
-begin
-  if NetWkstaGetInfo(nil, 100, WkstaInfo) <> NERR_Success then
-    raise EJclWin32Error.CreateRes(@RsENetWkstaGetInfo);
-  WkstaInfo100 := PWKSTA_INFO_100(WkstaInfo);
-  Result := WideString(PWideChar(WkstaInfo100^.wki100_langroup));
-  NetApiBufferFree(Pointer(WkstaInfo));
-end;
-
-{$ENDIF MSWINDOWS}
-function GetDomainName: string;
-{$IFDEF LINUX}
-var
-  MachineInfo: utsname;
-begin
-  fpUname(MachineInfo);
-  Result := MachineInfo.domain;
-end;
-{$ENDIF LINUX}
-{$IFDEF MSWINDOWS}
-//091123 HA Use LookupAccountSid to fetch the current users domain ...
-//begin
-//  Result := GetUserDomainName(GetLocalUserName);
-//end;
-var
-  hProcess, hAccessToken: THandle;
-  InfoBuffer: PChar;
-  AccountName: array [0..UNLEN] of Char;
-  DomainName: array [0..UNLEN] of Char;
-
-  InfoBufferSize: Cardinal;
-  AccountSize: Cardinal;
-  DomainSize: Cardinal;
-  snu: SID_NAME_USE;
-begin
-  InfoBufferSize := 1000;
-  AccountSize := Length(AccountName);
-  DomainSize := Length(DomainName);
-
-  hProcess := GetCurrentProcess;
-  if OpenProcessToken(hProcess, TOKEN_READ, hAccessToken) then
-  try
-    GetMem(InfoBuffer, InfoBufferSize);
-    try
-      if GetTokenInformation(hAccessToken, TokenUser, InfoBuffer, InfoBufferSize, InfoBufferSize) then
-        LookupAccountSid(nil, PSIDAndAttributes(InfoBuffer)^.sid, AccountName, AccountSize,
-                         DomainName, DomainSize, snu)
-      else
-        RaiseLastOSError;
-    finally
-      FreeMem(InfoBuffer)
-    end;
-    Result := DomainName;
-  finally
-    CloseHandle(hAccessToken);
-  end
-end;
-{$ENDIF MSWINDOWS}
-
-{$IFDEF MSWINDOWS}
-// Reference: How to Obtain BIOS Information from the Registry
-// http://support.microsoft.com/default.aspx?scid=kb;en-us;q195268
-
-function GetBIOSName: string;
-const
-  Win9xBIOSInfoKey = 'Enum\Root\*PNP0C01\0000';
-begin
-  if IsWinNT then
-    Result := ''
-  else
-    Result := RegReadStringDef(HKEY_LOCAL_MACHINE, Win9xBIOSInfoKey, 'BIOSName', '');
-end;
-
-function GetBIOSCopyright: string;
-const
-  ADR_BIOSCOPYRIGHT = $FE091;
-begin
-  Result := '';
-  if not IsWinNT and not IsBadReadPtr(Pointer(ADR_BIOSCOPYRIGHT), 2) then
-  try
-    Result := string(AnsiString(PAnsiChar(ADR_BIOSCOPYRIGHT)));
-  except
-    Result := '';
-  end;
-end;
-
-function GetBIOSExtendedInfo: string;
-const
-  ADR_BIOSEXTENDEDINFO = $FEC71;
-begin
-  Result := '';
-  if not IsWinNT and not IsBadReadPtr(Pointer(ADR_BIOSEXTENDEDINFO), 2) then
-  try
-    Result := string(AnsiString(PAnsiChar(ADR_BIOSEXTENDEDINFO)));
-  except
-    Result := '';
-  end;
-end;
-
-// Reference: How to Obtain BIOS Information from the Registry
-// http://support.microsoft.com/default.aspx?scid=kb;en-us;q195268
-
-{ TODO : the date string can be e.g. 00/00/00 }
-function GetBIOSDate: TDateTime;
-const
-  WIN10_REG_PATH = 'HARDWARE\DESCRIPTION\System\BIOS';
-  WIN10_REG_KEY  = 'BIOSReleaseDate';
-  WinNT_REG_PATH = 'HARDWARE\DESCRIPTION\System';
-  WinNT_REG_KEY  = 'SystemBiosDate';
-  Win9x_REG_PATH = 'Enum\Root\*PNP0C01\0000';
-  Win9x_REG_KEY  = 'BiosDate';
-var
-  RegStr: string;
-  {$IFDEF RTL150_UP}
-  FormatSettings: TFormatSettings;
-  {$ELSE ~RTL150_UP}
-  RegFormat: string;
-  RegSeparator: Char;
-  {$ENDIF ~RTL150_UP}
-begin
-  if IsWinNT then
-  begin
-    // location of the Bios date seems to have changed on newer systems (From windows 10 ?)
-    // The new location seems to exist since a while, but older location disappeared on newer OS
-    if RegValueExists(HKEY_LOCAL_MACHINE, WIN10_REG_PATH, WIN10_REG_KEY) then
-      RegStr := RegReadString(HKEY_LOCAL_MACHINE, WIN10_REG_PATH, WIN10_REG_KEY)
-    else
-      RegStr := RegReadString(HKEY_LOCAL_MACHINE, WinNT_REG_PATH, WinNT_REG_KEY);
-  end
-  else
-  begin
-    RegStr := RegReadString(HKEY_LOCAL_MACHINE, Win9x_REG_PATH, Win9x_REG_KEY);
-  end;
-  {$IFDEF RTL150_UP}
-  FillChar(FormatSettings, SizeOf(FormatSettings), 0);
-  FormatSettings.DateSeparator := '/';
-  FormatSettings.ShortDateFormat := 'm/d/y';
-  if not TryStrToDate(RegStr, Result, FormatSettings) then
-  begin
-    FormatSettings.ShortDateFormat := 'y/m/d';
-    if not TryStrToDate(RegStr, Result, FormatSettings) then
-      Result := 0;
-  end;
-  {$ELSE ~RTL150_UP}
-  Result := 0;
-  { TODO : change to a threadsafe solution }
-  RegFormat := ShortDateFormat;
-  RegSeparator := DateSeparator;
-  try
-    DateSeparator := '/';
-    try
-      ShortDateFormat := 'm/d/y';
-      Result := StrToDate(RegStr);
-    except
-      try
-        ShortDateFormat := 'y/m/d';
-        Result := StrToDate(RegStr);
-      except
-      end;
-    end;
-  finally
-    ShortDateFormat := RegFormat;
-    DateSeparator := RegSeparator;
-  end;
-  {$ENDIF ~RTL150_UP}
-end;
-
 {$ENDIF MSWINDOWS}
 
 //=== Processes, Tasks and Modules ===========================================
 
-{$IFDEF HAS_UNIT_LIBC}
-const
-  CommLen = 16;  // synchronize with size of comm in struct task_struct in
-                 //     /usr/include/linux/sched.h
-  SProcDirectory = '/proc';
-
-function RunningProcessesList(const List: TStrings; FullPath: Boolean): Boolean;
-var
-  ProcDir: PDirectoryStream;
-  PtrDirEnt: PDirEnt;
-  Scratch: TDirEnt;
-  ProcID: __pid_t;
-  E: Integer;
-  FileName: string;
-  F: PIOFile;
-begin
-  Result := False;
-  ProcDir := opendir(SProcDirectory);
-  if ProcDir <> nil then
-  begin
-    PtrDirEnt := nil;
-    {$IFDEF FPC}
-    if readdir_r(ProcDir, @Scratch, @PtrDirEnt) <> 0 then
-      Exit;
-    {$ELSE ~FPC}
-    if readdir_r(ProcDir, @Scratch, PtrDirEnt) <> 0 then
-      Exit;
-    {$ENDIF ~FPC}
-    List.BeginUpdate;
-    try
-      while PtrDirEnt <> nil do
-      begin
-        Val(PtrDirEnt^.d_name, ProcID, E);
-        if E = 0 then // name was process id
-        begin
-          FileName := '';
-
-          if FullPath then
-            FileName := SymbolicLinkTarget(Format('/proc/%s/exe', [PtrDirEnt^.d_name]));
-
-          if FileName = '' then // usually due to insufficient access rights
-          begin
-            // read stat
-            FileName := Format('/proc/%s/stat', [PtrDirEnt^.d_name]);
-            F := fopen(PChar(FileName), 'r');
-            if F = nil then
-              raise EJclError.CreateResFmt(@RsInvalidProcessID, [ProcID]);
-            try
-              SetLength(FileName, CommLen);
-              if fscanf(F, PChar(Format('%%*d (%%%d[^)])', [CommLen])), PChar(FileName)) <> 1 then
-                RaiseLastOSError;
-              StrResetLength(FileName);
-            finally
-              fclose(F);
-            end;
-          end;
-
-          List.AddObject(FileName, Pointer(ProcID));
-        end;
-        {$IFDEF FPC}
-        if readdir_r(ProcDir, @Scratch, @PtrDirEnt) <> 0 then
-          Break;
-        {$ELSE ~FPC}
-        if readdir_r(ProcDir, @Scratch, PtrDirEnt) <> 0 then
-          Break;
-        {$ENDIF ~FPC}
-      end;
-    finally
-      List.EndUpdate;
-    end;
-  end;
-end;
-
-{$ENDIF HAS_UNIT_LIBC}
 
 {$IFDEF MSWINDOWS}
-
-function RunningProcessesList(const List: TStrings; FullPath: Boolean): Boolean;
-
-  // This function always returns an empty string on Win9x
-  function ProcessFileName(PID: DWORD): string;
-  var
-    Handle: THandle;
-  begin
-    Result := '';
-    Handle := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, False, PID);
-    if Handle <> 0 then
-    try
-      SetLength(Result, MAX_PATH);
-      if FullPath then
-      begin
-        if GetModuleFileNameEx(Handle, 0, PChar(Result), MAX_PATH) > 0 then
-          StrResetLength(Result)
-        else
-          Result := '';
-      end
-      else
-      begin
-        if GetModuleBaseName(Handle, 0, PChar(Result), MAX_PATH) > 0 then
-          StrResetLength(Result)
-        else
-          Result := '';
-      end;
-    finally
-      CloseHandle(Handle);
-    end;
-  end;
-
-  { TODO: Check return value of CreateToolhelp32Snapshot on Windows NT (0?) }
-  function BuildListTH: Boolean;
-  var
-    SnapProcHandle: THandle;
-    ProcEntry: TProcessEntry32;
-    NextProc: Boolean;
-    FileName: string;
-    Win2kOrNewer: Boolean;
-  begin
-    SnapProcHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    Result := (SnapProcHandle <> INVALID_HANDLE_VALUE);
-    if Result then
-    try
-      Win2kOrNewer := JclCheckWinVersion(5, 0); // Win2k or newer
-      ProcEntry.dwSize := SizeOf(ProcEntry);
-      NextProc := Process32First(SnapProcHandle, ProcEntry);
-      while NextProc do
-      begin
-        if ProcEntry.th32ProcessID = 0 then
-        begin
-          // PID 0 is always the "System Idle Process" but this name cannot be
-          // retrieved from the system and has to be fabricated.
-          FileName := LoadResString(@RsSystemIdleProcess);
-        end
-        else
-        begin
-          if Win2kOrNewer then
-          begin
-            FileName := ProcessFileName(ProcEntry.th32ProcessID);
-            if FileName = '' then
-              FileName := ProcEntry.szExeFile;
-          end
-          else
-          begin
-            FileName := ProcEntry.szExeFile;
-            if not FullPath then
-              FileName := ExtractFileName(FileName);
-          end;
-        end;
-        List.AddObject(FileName, Pointer(ProcEntry.th32ProcessID));
-        NextProc := Process32Next(SnapProcHandle, ProcEntry);
-      end;
-    finally
-      CloseHandle(SnapProcHandle);
-    end;
-  end;
-
-  function BuildListPS: Boolean;
-  var
-    PIDs: array [0..1024] of DWORD;
-    Needed: DWORD;
-    I: Integer;
-    FileName: string;
-  begin
-    Needed := 0;
-    Result := EnumProcesses(@PIDs, SizeOf(PIDs), Needed);
-    if Result then
-    begin
-      for I := 0 to (Needed div SizeOf(DWORD)) - 1 do
-      begin
-        case PIDs[I] of
-          0:
-            // PID 0 is always the "System Idle Process" but this name cannot be
-            // retrieved from the system and has to be fabricated.
-            FileName := LoadResString(@RsSystemIdleProcess);
-          2:
-            // On NT 4 PID 2 is the "System Process" but this name cannot be
-            // retrieved from the system and has to be fabricated.
-            if IsWinNT4 then
-              FileName := LoadResString(@RsSystemProcess)
-            else
-              FileName := ProcessFileName(PIDs[I]);
-          8:
-            // On Win2K PID 8 is the "System Process" but this name cannot be
-            // retrieved from the system and has to be fabricated.
-            if IsWin2k or IsWinXP then
-              FileName := LoadResString(@RsSystemProcess)
-            else
-              FileName := ProcessFileName(PIDs[I]);
-        else
-          FileName := ProcessFileName(PIDs[I]);
-        end;
-        if FileName <> '' then
-          List.AddObject(FileName, Pointer(PIDs[I]));
-      end;
-    end;
-  end;
-
-begin
-  { TODO : safer solution? }
-  List.BeginUpdate;
-  try
-    if GetWindowsVersion in [wvWinNT31, wvWinNT35, wvWinNT351, wvWinNT4] then
-      Result := BuildListPS
-    else
-      Result := BuildListTH;
-  finally
-    List.EndUpdate;
-  end;
-end;
-
-{ TODO Windows 9x ? }
 
 function LoadedModulesList(const List: TStrings; ProcessID: DWORD; HandlesOnly: Boolean): Boolean;
 
   procedure AddToList(ProcessHandle: THandle; Module: HMODULE);
+  const
+    BufferSize = 4096;
   var
-    FileName: array [0..MAX_PATH] of Char;
+    FileName: PWideChar;
     ModuleInfo: TModuleInfo;
   begin
     ModuleInfo.EntryPoint := nil;
-    {$IFDEF FPC}
-    if GetModuleInformation(ProcessHandle, Module, ModuleInfo, SizeOf(ModuleInfo)) then
-    {$ELSE ~FPC}
     if GetModuleInformation(ProcessHandle, Module, @ModuleInfo, SizeOf(ModuleInfo)) then
-    {$ENDIF ~FPC}
     begin
       if HandlesOnly then
         List.AddObject('', Pointer(ModuleInfo.lpBaseOfDll))
       else
-      if GetModuleFileNameEx(ProcessHandle, Module, Filename, Length(Filename)) > 0 then
-        List.AddObject(FileName, Pointer(ModuleInfo.lpBaseOfDll));
+      begin
+        GetMem(FileName, BufferSize * SizeOf(WideChar));
+        try
+          if GetModuleFileNameExW(ProcessHandle, Module, FileName, BufferSize) > 0 then
+            List.AddObject(FileName, Pointer(ModuleInfo.lpBaseOfDll));
+        finally
+          FreeMem(FileName);
+        end;
+      end;
     end;
   end;
 
@@ -3375,74 +2344,6 @@ begin
     Result := taError;
 end;
 
-function GetProcessNameFromWnd(Wnd: THandle): string;
-var
-  List: TStringList;
-  PID: DWORD;
-  I: Integer;
-begin
-  Result := '';
-  if IsWindow(Wnd) then
-  begin
-    PID := DWORD(-1);
-    GetWindowThreadProcessId(Wnd, @PID);
-    List := TStringList.Create;
-    try
-      if RunningProcessesList(List, True) then
-      begin
-        I := List.IndexOfObject(Pointer(PID));
-        if I > -1 then
-          Result := List[I];
-      end;
-    finally
-      List.Free;
-    end;
-  end;
-end;
-
-function GetPidFromProcessName(const ProcessName: string): THandle;
-var
-  List: TStringList;
-  I: Integer;
-  HasFullPath: Boolean;
-begin
-  Result := INVALID_HANDLE_VALUE;
-  List := TStringList.Create;
-  try
-    HasFullPath := ExtractFilePath(ProcessName) <> '';
-    if RunningProcessesList(List, HasFullPath) then
-    begin
-      I := List.IndexOf(ProcessName);
-      if I > -1 then
-        Result := DWORD(List.Objects[I]);
-    end;
-  finally
-    List.Free;
-  end;
-end;
-
-function GetProcessNameFromPid(PID: DWORD): string;
-var
-  List: TStringList;
-  I: Integer;
-begin
-  // Note: there are other ways to retrieve the name of the process given it's
-  // PID but this implementation seems to work best without making assumptions
-  // although it may not be the most efficient implementation.
-  Result := '';
-  List := TStringList.Create;
-  try
-    if RunningProcessesList(List, True) then
-    begin
-      I := List.IndexOfObject(Pointer(PID));
-      if I > -1 then
-        Result := List[I];
-    end;
-  finally
-    List.Free;
-  end;
-end;
-
 type
   PSearch = ^TSearch;
   TSearch = record
@@ -3463,82 +2364,6 @@ begin
   end
   else
     Result := True;
-end;
-
-function GetMainAppWndFromPid(PID: DWORD): THandle;
-var
-  SearchRec: TSearch;
-begin
-  SearchRec.PID := PID;
-  SearchRec.Wnd := 0;
-  EnumWindows(@EnumMainAppWindowsProc, LPARAM(@SearchRec));
-  Result := SearchRec.Wnd;
-end;
-
-type
-  PEnumWndStruct = ^TEnumWndStruct;
-  TEnumWndStruct = record
-    PID: DWORD;
-    WndClassName: string;
-    ResultWnd: HWND;
-  end;
-
-function EnumPidWinProc(Wnd: HWND; Enum: PEnumWndStruct): BOOL; stdcall;
-var
-  PID: DWORD;
-  C: PChar;
-  CLen: Integer;
-begin
-  Result := True;
-  GetWindowThreadProcessId(Wnd, @PID);
-  if (PID = Enum.PID) then
-  begin
-    CLen := Length(Enum.WndClassName)+1;
-    C := StrAlloc(CLen);
-    if (GetClassName(Wnd, C, CLen) > 0) and (C = Enum.WndClassName) then
-    begin
-      Result := False;
-      Enum.ResultWnd := Wnd;
-    end;
-    StrDispose(C);
-  end;
-end;
-
-function GetWndFromPid(PID: DWORD; const WindowClassName: string): HWND;
-var
-  EnumWndStruct: TEnumWndStruct;
-begin
-  EnumWndStruct.PID := PID;
-  EnumWndStruct.WndClassName := WindowClassName;
-  EnumWndStruct.ResultWnd := 0;
-  EnumWindows(@EnumPidWinProc, LPARAM(@EnumWndStruct));
-  Result := EnumWndStruct.ResultWnd;
-end;
-
-function GetShellProcessName: string;
-const
-  cShellKey = HKLM_CURRENT_VERSION_NT + '\WinLogon';
-  cShellValue = 'Shell';
-  cShellDefault = 'explorer.exe';
-  cShellSystemIniFileName = 'system.ini';
-  cShellBootSection = 'boot';
-begin
-  if IsWinNT then
-    Result := RegReadStringDef(HKEY_LOCAL_MACHINE, cShellKey, cShellValue, '')
-  else
-    Result := IniReadString(PathAddSeparator(GetWindowsFolder) + cShellSystemIniFileName, cShellBootSection, cShellValue);
-  if Result = '' then
-    Result := cShellDefault;
-end;
-
-function GetShellProcessHandle: THandle;
-var
-  Pid: Longword;
-begin
-  Pid := GetPidFromProcessName(GetShellProcessName);
-  Result := OpenProcess(PROCESS_ALL_ACCESS, False, Pid);
-  if Result = 0 then
-    RaiseLastOSError;
 end;
 
 //=== Version Information ====================================================
@@ -3737,7 +2562,7 @@ begin
                   Result := wvWin10
               end else
               begin
-                WindowsReleaseId := StrToIntDef(ReadWindowsNTCurrentVersionStringValue('ReleaseId', '0'), -1);                  
+                WindowsReleaseId := StrToIntDef(ReadWindowsNTCurrentVersionStringValue('ReleaseId', '0'), -1);
                 case WindowsReleaseId of
                   1607:
                     Result := wvWinServer2016;
@@ -4083,7 +2908,7 @@ begin
     wvWinServer:
       Result := LoadResString(@RsOSVersionWinServer);
     wvWin11:
-      Result := LoadResString(@RsOSVersionWin11);      
+      Result := LoadResString(@RsOSVersionWin11);
   else
     Result := '';
   end;
@@ -4404,7 +3229,7 @@ begin
       Result := '2024 Update'
     else
     if WindowsDisplayVersion = '25H2' then
-      Result := '2025 Update'      
+      Result := '2025 Update'
     else
       Result := WindowsDisplayVersion + ' Update';
     Result := Trim(GetWindowsVersionString + ' ' + Result);
@@ -4824,7 +3649,7 @@ begin
     PROCESSOR_ARCHITECTURE_ARM:
       Result := paARM;
     PROCESSOR_ARCHITECTURE_ARM64:
-      Result := paARM64;      
+      Result := paARM64;
     else
       Result := paUnknown;
   end;
@@ -6117,145 +4942,8 @@ begin
   end;
 end;
 
-//=== Advanced Power Management (APM) ========================================
 
 {$IFDEF MSWINDOWS}
-function GetAPMLineStatus: TAPMLineStatus;
-var
-  SystemPowerStatus: TSystemPowerStatus;
-begin
-  Result := alsUnknown;
-
-  if (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion < 5) then // Windows NT doesn't support GetSystemPowerStatus
-    Exit;                                                                     // so we return alsUnknown
-
-  SystemPowerStatus.ACLineStatus := 0;
-  if not GetSystemPowerStatus(SystemPowerStatus) then
-    RaiseLastOSError
-  else
-  begin
-    case SystemPowerStatus.ACLineStatus  of
-      0:
-        Result := alsOffline;
-      1:
-        Result := alsOnline;
-      255:
-        Result := alsUnknown;
-    end;
-  end;
-end;
-
-function GetAPMBatteryFlag: TAPMBatteryFlag;
-var
-  SystemPowerStatus: TSystemPowerStatus;
-begin
-  Result := abfUnknown;
-
-  if (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion < 5) then // Windows NT doesn't support GetSystemPowerStatus
-    Exit;                                                                     // so we return abfUnknown
-
-  SystemPowerStatus.ACLineStatus := 0;
-  if not GetSystemPowerStatus(SystemPowerStatus) then
-    RaiseLastOSError
-  else
-  begin
-    case SystemPowerStatus.BatteryFlag of
-      1:
-       Result := abfHigh;
-      2:
-        Result := abfLow;
-      4:
-        Result := abfCritical;
-      8:
-        Result := abfCharging;
-      128:
-        Result := abfNoBattery;
-      255:
-        Result := abfUnknown;
-    end;
-  end;
-end;
-
-
-function GetAPMBatteryFlags: TAPMBatteryFlags;
-var
-  SystemPowerStatus: TSystemPowerStatus;
-begin
-  Result := [];
-
-  if (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion < 5) then // Windows NT doesn't support GetSystemPowerStatus
-  begin
-    Result := [abfUnknown];
-    Exit;                                                                     // so we return [abfUnknown]
-  end;
-
-  SystemPowerStatus.ACLineStatus := 0;
-  if not GetSystemPowerStatus(SystemPowerStatus) then
-    RaiseLastOSError
-  else
-  begin
-    if (SystemPowerStatus.BatteryFlag and 1) <> 0 then
-      Result := Result + [abfHigh];
-    if (SystemPowerStatus.BatteryFlag and 2) <> 0 then
-      Result := Result + [abfLow];
-    if (SystemPowerStatus.BatteryFlag and 4) <> 0 then
-      Result := Result + [abfCritical];
-    if (SystemPowerStatus.BatteryFlag and 8) <> 0 then
-      Result := Result + [abfCharging];
-    if (SystemPowerStatus.BatteryFlag and 128) <> 0 then
-      Result := Result + [abfNoBattery];
-    if SystemPowerStatus.BatteryFlag = 255 then
-      Result := Result + [abfUnknown];
-  end;
-end;
-
-function GetAPMBatteryLifePercent: Integer;
-var
-  SystemPowerStatus: TSystemPowerStatus;
-begin
-  Result := 0;
-
-  if (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion < 5) then // Windows NT doesn't support GetSystemPowerStatus
-    Exit;
-
-  SystemPowerStatus.ACLineStatus := 0;
-  if not GetSystemPowerStatus(SystemPowerStatus) then
-    RaiseLastOSError
-  else
-    Result := SystemPowerStatus.BatteryLifePercent;
-end;
-
-function GetAPMBatteryLifeTime: DWORD;
-var
-  SystemPowerStatus: TSystemPowerStatus;
-begin
-  Result := 0;
-
-  if (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion < 5) then // Windows NT doesn't support GetSystemPowerStatus
-    Exit;
-
-  SystemPowerStatus.ACLineStatus := 0;
-  if not GetSystemPowerStatus(SystemPowerStatus) then
-    RaiseLastOSError
-  else
-    Result := SystemPowerStatus.BatteryLifeTime;
-end;
-
-function GetAPMBatteryFullLifeTime: DWORD;
-var
-  SystemPowerStatus: TSystemPowerStatus;
-begin
-  Result := 0;
-
-  if (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion < 5) then // Windows NT doesn't support GetSystemPowerStatus
-    Exit;
-
-  SystemPowerStatus.ACLineStatus := 0;
-  if not GetSystemPowerStatus(SystemPowerStatus) then
-    RaiseLastOSError
-  else
-    Result := SystemPowerStatus.BatteryFullLifeTime;
-end;
 
 //=== Memory Information =====================================================
 
@@ -6498,7 +5186,7 @@ begin
     except
       // Ignore any exception from the DLL's DllMain(DLL_PROCESS_DETACH) function
     end;
-    ResmeterLibHandle := 0;    
+    ResmeterLibHandle := 0;
   end;
 end;
 
@@ -6553,67 +5241,6 @@ begin
   end
   else
     Result := 0;
-end;
-
-//=== Installed programs =====================================================
-
-function ProgIDExists(const ProgID: string): Boolean;
-var
-  Tmp: TGUID;
-  WideProgID: WideString;
-begin
-  WideProgID := ProgID;
-  Result := Succeeded(CLSIDFromProgID(PWideChar(WideProgID), Tmp));
-end;
-
-function IsWordInstalled: Boolean;
-begin
-  Result := ProgIDExists('Word.Application');
-end;
-
-function IsExcelInstalled: Boolean;
-begin
-  Result := ProgIDExists('Excel.Application');
-end;
-
-function IsAccessInstalled: Boolean;
-begin
-  Result := ProgIDExists('Access.Application');
-end;
-
-function IsPowerPointInstalled: Boolean;
-begin
-  Result := ProgIDExists('PowerPoint.Application');
-end;
-
-function IsFrontPageInstalled: Boolean;
-begin
-  Result := ProgIDExists('FrontPage.Application');
-end;
-
-function IsOutlookInstalled: Boolean;
-begin
-  Result := ProgIDExists('Outlook.Application');
-end;
-
-function IsInternetExplorerInstalled: Boolean;
-begin
-  Result := ProgIDExists('InternetExplorer.Application');
-end;
-
-function IsMSProjectInstalled: Boolean;
-begin
-  Result := ProgIDExists('MSProject.Application');
-end;
-
-function IsOpenOfficeInstalled: Boolean;
-begin
-  Result := ProgIDExists('com.sun.star.ServiceManager');
-end;
-
-function IsLibreOfficeInstalled: Boolean;
-begin
-  Result := ProgIDExists('com.sun.star.ServiceManager.1');
 end;
 
 //=== Initialization/Finalization ============================================
@@ -6713,15 +5340,15 @@ begin
       wvWinServer2022:
         IsWinServer2022 := True;
       wvWinServer2025:
-        IsWinServer2025 := True;        
+        IsWinServer2025 := True;
       wvWinServer:
         IsWinServer := True;
       wvWin11:
-        IsWin11 := True;      
+        IsWin11 := True;
     end;
   except
     // Don't crash the application if anything goes wrong detecting the correct
-    // Windows version information.        
+    // Windows version information.
   end;
 end;
 

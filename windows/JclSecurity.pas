@@ -99,7 +99,6 @@ procedure LookupAccountBySid(Sid: PSID; out Name, Domain: AnsiString; Silent: Bo
 procedure LookupAccountBySid(Sid: PSID; out Name, Domain: WideString; Silent: Boolean = False); overload;
 procedure QueryTokenInformation(Token: THandle; InformationClass: TTokenInformationClass; var Buffer: Pointer);
 procedure FreeTokenInformation(var Buffer: Pointer);
-function GetInteractiveUserName: string;
 
 // SID utilities
 function SIDToString(ASID: PSID): string;
@@ -580,41 +579,6 @@ begin
   if Buffer <> nil then
     FreeMem(Buffer);
   Buffer := nil;
-end;
-
-function GetInteractiveUserName: string;
-var
-  Handle: THandle;
-  Token: THandle;
-  User: PTokenUser;
-  {$IFDEF SUPPORTS_UNICODE}
-  Name, Domain: WideString;
-  {$ELSE ~SUPPORTS_UNICODE}
-  Name, Domain: AnsiString;
-  {$ENDIF ~SUPPORTS_UNICODE}
-begin
-  Result := '';
-  if not IsWinNT then  // if Win9x, then function return ''
-    Exit;
-  Handle := GetShellProcessHandle;
-  try
-    Token := 0;
-    Win32Check(OpenProcessToken(Handle, TOKEN_QUERY, Token));
-    try
-      User := nil;
-      QueryTokenInformation(Token, TokenUser, Pointer(User));
-      try
-        LookupAccountBySid(User.User.Sid, Name, Domain);
-        Result := Domain + '\' + Name;
-      finally
-        FreeMem(User);
-      end;
-    finally
-      CloseHandle(Token);
-    end;
-  finally
-    CloseHandle(Handle);
-  end;
 end;
 
 //=== SID utilities ==========================================================

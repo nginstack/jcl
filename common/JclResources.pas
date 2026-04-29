@@ -1288,9 +1288,6 @@ resourcestring
   // TJclMappedTextReader
   RsFileIndexOutOfRange = 'Index of out range';
 
-  // FileGetTypeName()
-  RsDefaultFileTypeName = ' File';
-
 //=== JclMapi ================================================================
 resourcestring
   RsMapiError         = 'MAPI Error: (%d) "%s"';

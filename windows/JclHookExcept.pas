@@ -161,35 +161,6 @@ var
   Filters: TThreadList;
   {$ENDIF BORLAND}
 
-{$IFDEF HOOK_DLL_EXCEPTIONS}
-const
-  JclHookExceptDebugHookName = '__JclHookExcept';
-
-type
-  TJclHookExceptDebugHook = procedure(Module: HMODULE; Hook: Boolean); stdcall;
-
-  TJclHookExceptModuleList = class(TObject)
-  private
-    FModules: TThreadList;
-  protected
-    procedure HookStaticModules;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    class function JclHookExceptDebugHookAddr: Pointer;
-    procedure HookModule(Module: HMODULE);
-    procedure List(out ModulesList: TJclModuleArray);
-    procedure UnhookModule(Module: HMODULE);
-  end;
-
-var
-  HookExceptModuleList: TJclHookExceptModuleList;
-  JclHookExceptDebugHook: Pointer;
-
-exports
-  JclHookExceptDebugHook name JclHookExceptDebugHookName;
-{$ENDIF HOOK_DLL_EXCEPTIONS}
-
 {$STACKFRAMES OFF}
 
 threadvar
@@ -690,172 +661,24 @@ begin
     TJclPeMapImgHooks.ReplaceImport(Pointer(Module), kernel32, @HookedRaiseException, @Kernel32_RaiseException);
 end;
 
-{$IFDEF HOOK_DLL_EXCEPTIONS}
-// Exceptions hooking in libraries
-
-procedure JclHookExceptDebugHookProc(Module: HMODULE; Hook: Boolean); stdcall;
-begin
-  if Hook then
-    HookExceptModuleList.HookModule(Module)
-  else
-    HookExceptModuleList.UnhookModule(Module);
-end;
-
-function CallExportedHookExceptProc(Module: HMODULE; Hook: Boolean): Boolean;
-var
-  HookExceptProcPtr: PPointer;
-  HookExceptProc: TJclHookExceptDebugHook;
-begin
-  HookExceptProcPtr := TJclHookExceptModuleList.JclHookExceptDebugHookAddr;
-  Result := Assigned(HookExceptProcPtr);
-  if Result then
-  begin
-    @HookExceptProc := HookExceptProcPtr^;
-    if Assigned(HookExceptProc) then
-      HookExceptProc(Module, True);
-  end;
-end;
-{$ENDIF HOOK_DLL_EXCEPTIONS}
-
 function JclInitializeLibrariesHookExcept: Boolean;
 begin
-  {$IFDEF HOOK_DLL_EXCEPTIONS}
-  if IsLibrary then
-    Result := CallExportedHookExceptProc(SystemTObjectInstance, True)
-  else
-  begin
-    if not Assigned(HookExceptModuleList) then
-      HookExceptModuleList := TJclHookExceptModuleList.Create;
-    Result := True;
-  end;
-  {$ELSE HOOK_DLL_EXCEPTIONS}
   Result := True;
-  {$ENDIF HOOK_DLL_EXCEPTIONS}
 end;
 
 function JclHookedExceptModulesList(out ModulesList: TJclModuleArray): Boolean;
 begin
-  {$IFDEF HOOK_DLL_EXCEPTIONS}
-  Result := Assigned(HookExceptModuleList);
-  if Result then
-    HookExceptModuleList.List(ModulesList);
-  {$ELSE HOOK_DLL_EXCEPTIONS}
   Result := False;
   SetLength(ModulesList, 0);
-  {$ENDIF HOOK_DLL_EXCEPTIONS}
 end;
-
-{$IFDEF HOOK_DLL_EXCEPTIONS}
-procedure FinalizeLibrariesHookExcept;
-begin
-  FreeAndNil(HookExceptModuleList);
-  if IsLibrary then
-    CallExportedHookExceptProc(SystemTObjectInstance, False);
-end;
-
-//=== { TJclHookExceptModuleList } ===========================================
-
-constructor TJclHookExceptModuleList.Create;
-begin
-  inherited Create;
-  FModules := TThreadList.Create;
-  HookStaticModules;
-  JclHookExceptDebugHook := @JclHookExceptDebugHookProc;
-end;
-
-destructor TJclHookExceptModuleList.Destroy;
-begin
-  JclHookExceptDebugHook := nil;
-  FreeAndNil(FModules);
-  inherited Destroy;
-end;
-
-procedure TJclHookExceptModuleList.HookModule(Module: HMODULE);
-begin
-  with FModules.LockList do
-  try
-    if IndexOf(Pointer(Module)) = -1 then
-    begin
-      Add(Pointer(Module));
-      JclHookExceptionsInModule(Module);
-    end;
-  finally
-    FModules.UnlockList;
-  end;
-end;
-
-procedure TJclHookExceptModuleList.HookStaticModules;
-var
-  ModulesList: TStringList;
-  I: Integer;
-  Module: HMODULE;
-begin
-  ModulesList := nil;
-  with FModules.LockList do
-  try
-    ModulesList := TStringList.Create;
-    if LoadedModulesList(ModulesList, GetCurrentProcessId, True) then
-      for I := 0 to ModulesList.Count - 1 do
-      begin
-        Module := HMODULE(ModulesList.Objects[I]);
-        if GetProcAddress(Module, JclHookExceptDebugHookName) <> nil then
-          HookModule(Module);
-      end;    
-  finally
-    FModules.UnlockList;
-    ModulesList.Free;
-  end;
-end;
-
-class function TJclHookExceptModuleList.JclHookExceptDebugHookAddr: Pointer;
-var
-  HostModule: HMODULE;
-begin
-  HostModule := GetModuleHandle(nil);
-  Result := GetProcAddress(HostModule, JclHookExceptDebugHookName);
-end;
-
-procedure TJclHookExceptModuleList.List(out ModulesList: TJclModuleArray);
-var
-  I: Integer;
-begin
-  with FModules.LockList do
-  try
-    SetLength(ModulesList, Count);
-    for I := 0 to Count - 1 do
-      ModulesList[I] := HMODULE(Items[I]);
-  finally
-    FModules.UnlockList;
-  end;
-end;
-
-procedure TJclHookExceptModuleList.UnhookModule(Module: HMODULE);
-begin
-  with FModules.LockList do
-  try
-    Remove(Pointer(Module));
-  finally
-    FModules.UnlockList;
-  end;
-end;
-{$ENDIF HOOK_DLL_EXCEPTIONS}
 
 initialization
   Notifiers := TThreadList.Create;
   {$IFDEF BORLAND}
   Filters := TThreadList.Create;
   {$ENDIF BORLAND}
-  {$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-  {$ENDIF UNITVERSIONING}
 
 finalization
-  {$IFDEF UNITVERSIONING}
-  UnregisterUnitVersion(HInstance);
-  {$ENDIF UNITVERSIONING}
-  {$IFDEF HOOK_DLL_EXCEPTIONS}
-  FinalizeLibrariesHookExcept;
-  {$ENDIF HOOK_DLL_EXCEPTIONS}
   FreeThreadObjList(Notifiers);
   {$IFDEF BORLAND}
   FreeThreadObjList(Filters);

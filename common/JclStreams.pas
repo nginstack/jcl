@@ -365,22 +365,6 @@ type
     procedure Flush; override;
   end;
 
-  TJclCRC16Stream = class(TJclSectoredStream)
-  protected
-    procedure AfterBlockRead; override;
-    procedure BeforeBlockWrite; override;
-  public
-    constructor Create(AStorageStream: TStream; AOwnsStream: Boolean = False);
-  end;
-
-  TJclCRC32Stream = class(TJclSectoredStream)
-  protected
-    procedure AfterBlockRead; override;
-    procedure BeforeBlockWrite; override;
-  public
-    constructor Create(AStorageStream: TStream; AOwnsStream: Boolean = False);
-  end;
-
   {$IFDEF COMPILER7_UP}
     {$DEFINE SIZE64}
   {$ENDIF ~COMPILER7_UP}
@@ -2001,60 +1985,6 @@ end;
 procedure TJclSectoredStream.SetSize(const NewSize: Int64);
 begin
   inherited SetSize(FlatToSectored(NewSize));
-end;
-
-//=== { TJclCRC16Stream } ====================================================
-
-procedure TJclCRC16Stream.AfterBlockRead;
-var
-  CRC: Word;
-begin
-  CRC := Word(FBuffer[FBufferCurrentSize]) or (Word(FBuffer[FBufferCurrentSize + 1]) shl 8);
-  if CheckCrc16(FBuffer, FBufferCurrentSize, CRC) < 0 then
-    raise EJclStreamError.CreateRes(@RsStreamsCRCError);
-end;
-
-procedure TJclCRC16Stream.BeforeBlockWrite;
-var
-  CRC: Word;
-begin
-  CRC := Crc16(FBuffer, FBufferCurrentSize);
-  FBuffer[FBufferCurrentSize] := CRC and $FF;
-  FBuffer[FBufferCurrentSize + 1] := CRC shr 8;
-end;
-
-constructor TJclCRC16Stream.Create(AStorageStream: TStream; AOwnsStream: Boolean);
-begin
-  inherited Create(AStorageStream, AOwnsStream, 2);
-end;
-
-//=== { TJclCRC32Stream } ====================================================
-
-procedure TJclCRC32Stream.AfterBlockRead;
-var
-  CRC: Cardinal;
-begin
-  CRC := Cardinal(FBuffer[FBufferCurrentSize]) or (Cardinal(FBuffer[FBufferCurrentSize + 1]) shl 8)
-    or (Cardinal(FBuffer[FBufferCurrentSize + 2]) shl 16) or (Cardinal(FBuffer[FBufferCurrentSize + 3]) shl 24);
-  if CheckCrc32(FBuffer, FBufferCurrentSize, CRC) < 0 then
-    raise EJclStreamError.CreateRes(@RsStreamsCRCError);
-end;
-
-procedure TJclCRC32Stream.BeforeBlockWrite;
-var
-  CRC: Cardinal;
-begin
-  CRC := Crc32(FBuffer, FBufferCurrentSize);
-  FBuffer[FBufferCurrentSize] := CRC and $FF;
-  FBuffer[FBufferCurrentSize + 1] := (CRC shr 8) and $FF;
-  FBuffer[FBufferCurrentSize + 2] := (CRC shr 16) and $FF;
-  FBuffer[FBufferCurrentSize + 3] := (CRC shr 24) and $FF;
-end;
-
-constructor TJclCRC32Stream.Create(AStorageStream: TStream;
-  AOwnsStream: Boolean);
-begin
-  inherited Create(AStorageStream, AOwnsStream, 4);
 end;
 
 //=== { TJclSplitStream } ====================================================
