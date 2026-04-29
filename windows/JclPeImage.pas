@@ -1062,18 +1062,6 @@ type
     property ItemFromNewAddress[NewAddress: Pointer]: TJclPeMapImgHookItem read GetItemFromNewAddress;
   end;
 
-// Image access under a debbuger
-function PeDbgImgNtHeaders32(ProcessHandle: THandle; BaseAddress: TJclAddr32;
-  var NtHeaders: TImageNtHeaders32): Boolean;
-// TODO 64 bit version
-//function PeDbgImgNtHeaders64(ProcessHandle: THandle; BaseAddress: TJclAddr64;
-//  var NtHeaders: TImageNtHeaders64): Boolean;
-
-function PeDbgImgLibraryName32(ProcessHandle: THandle; BaseAddress: TJclAddr32;
-  var Name: string): Boolean;
-//function PeDbgImgLibraryName64(ProcessHandle: THandle; BaseAddress: TJclAddr64;
-//  var Name: string): Boolean;
-
 // Borland BPL packages name unmangling
 type
   TJclBorUmSymbolKind = (skData, skFunction, skConstructor, skDestructor, skRTTI, skVTable);
@@ -3357,17 +3345,30 @@ end;
 
 class function TJclPeImage.ExpandBySearchPath(const ModuleName, BasePath: string): TFileName;
 var
-  FullName: array [0..MAX_PATH] of Char;
+  FullName: PWideChar;
+  RequiredSize: DWORD;
   FilePart: PChar;
 begin
   Result := PathAddSeparator(ExtractFilePath(BasePath)) + ModuleName;
   if FileExists(Result) then
     Exit;
   FilePart := nil;
-  if SearchPath(nil, PChar(ModuleName), nil, Length(FullName), FullName, FilePart) = 0 then
+
+  RequiredSize := SearchPathW(nil, PChar(ModuleName), nil, 0, nil, FilePart);
+  if RequiredSize = 0 then
     Result := ModuleName
   else
-    Result := FullName;
+  begin
+    GetMem(FullName, RequiredSize * SizeOf(WideChar));
+    try
+      if SearchPathW(nil, PChar(ModuleName), nil, RequiredSize, FullName, FilePart) = 0 then
+        Result := ModuleName
+      else
+        Result := FullName;
+    finally
+      FreeMem(FullName);
+    end;
+  end;
 end;
 
 function TJclPeImage.ExpandModuleName(const ModuleName: string): TFileName;
@@ -6651,59 +6652,6 @@ begin
   Result := ReadProcessMemory(ProcessHandle, Pointer(Address), Buffer, Size, BR);
 end;
 
-// TODO: 64 bit version
-function PeDbgImgNtHeaders32(ProcessHandle: THandle; BaseAddress: TJclAddr32;
-  var NtHeaders: TImageNtHeaders32): Boolean;
-var
-  DosHeader: TImageDosHeader;
-begin
-  Result := False;
-  ResetMemory(NtHeaders, SizeOf(NtHeaders));
-  ResetMemory(DosHeader, SizeOf(DosHeader));
-  if not InternalReadProcMem(ProcessHandle, TJclAddr32(BaseAddress), @DosHeader, SizeOf(DosHeader)) then
-    Exit;
-  if DosHeader.e_magic <> IMAGE_DOS_SIGNATURE then
-    Exit;
-  Result := InternalReadProcMem(ProcessHandle, TJclAddr32(BaseAddress) + TJclAddr32(DosHeader._lfanew),
-    @NtHeaders, SizeOf(TImageNtHeaders32));
-end;
-
-// TODO: 64 bit version
-function PeDbgImgLibraryName32(ProcessHandle: THandle; BaseAddress: TJclAddr32;
-  var Name: string): Boolean;
-var
-  NtHeaders32: TImageNtHeaders32;
-  DataDir: TImageDataDirectory;
-  ExportDir: TImageExportDirectory;
-  UTF8Name: TUTF8String;
-begin
-  Name := '';
-
-  NtHeaders32.Signature := 0;
-  Result := PeDbgImgNtHeaders32(ProcessHandle, BaseAddress, NtHeaders32);
-  if not Result then
-    Exit;
-  DataDir := NtHeaders32.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
-  if DataDir.Size = 0 then
-    Exit;
-  if not InternalReadProcMem(ProcessHandle, TJclAddr(BaseAddress) + DataDir.VirtualAddress,
-    @ExportDir, SizeOf(ExportDir)) then
-    Exit;
-  if ExportDir.Name = 0 then
-    Exit;
-  SetLength(UTF8Name, MAX_PATH);
-  if InternalReadProcMem(ProcessHandle, TJclAddr(BaseAddress) + ExportDir.Name, PAnsiChar(UTF8Name), MAX_PATH) then
-  begin
-    StrResetLength(UTF8Name);
-    if not TryUTF8ToString(UTF8Name, Name) then
-      Name := string(UTF8Name);
-  end
-  else
-    Name := '';
-end;
-
-// Borland BPL packages name unmangling
-
 {$IFDEF CPU64}
 function PeBorUnmangleName(const Name: string; out Unmangled: string;
   out Description: TJclBorUmDescription; out BasePos: Integer): TJclBorUmResult;
@@ -6948,7 +6896,7 @@ begin
       '_':
         if (Length(Name) > 3) and (Name[2] = 'Z') and (Name[3] = 'N') then
           Result := umBorland;
-      {$ENDIF CPU64}        
+      {$ENDIF CPU64}
     end;
 end;
 

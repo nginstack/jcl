@@ -150,8 +150,6 @@ function PathExtractFileNameNoExt(const Path: string): string;
 {$IFDEF MSWINDOWS}
 function PathExtractPathDepth(const Path: string; Depth: Integer): string;
 function PathGetDepth(const Path: string): Integer;
-function PathGetLongName(const Path: string): string;
-function PathGetShortName(const Path: string): string;
 {$ENDIF MSWINDOWS}
 {$IFNDEF UNIX}
 function PathGetRelativePath(Origin, Destination: string): string;
@@ -216,7 +214,6 @@ procedure EnumDirectories(const Root: string; const HandleDirectory: TFileHandle
 procedure CreateEmptyFile(const FileName: string);
 function CloseVolume(var Volume: THandle): Boolean;
 {$IFNDEF FPC}
-function DeleteDirectory(const DirectoryName: string; MoveToRecycleBin: Boolean): Boolean;
 function CopyDirectory(ExistingDirectoryName, NewDirectoryName: string): Boolean;
 function MoveDirectory(ExistingDirectoryName, NewDirectoryName: string): Boolean;
 {$ENDIF ~FPC}
@@ -224,49 +221,18 @@ function DelTree(const Path: string): Boolean;
 function DelTreeEx(const Path: string; AbortOnFailure: Boolean; Progress: TDelTreeProgress): Boolean;
 function DiskInDrive(Drive: Char): Boolean;
 function DirectoryExists(const Name: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): Boolean;
-function FileCreateTemp(var Prefix: string): THandle;
 {$ENDIF MSWINDOWS}
-{$IFDEF POSIX}
-function FileCreateTemp(var Prefix: string): THandle;
-{$ENDIF POSIX}
 {$IFDEF MSWINDOWS}
-function FileBackup(const FileName: string; Move: Boolean = False): Boolean;
 function FileCopy(const ExistingFileName, NewFileName: string; ReplaceExisting: Boolean = False): Boolean;
 {$ENDIF MSWINDOWS}
 function FileDateTime(const FileName: string): TDateTime;
-function FileDelete(const FileName: string; MoveToRecycleBin: Boolean = False): Boolean;
+function FileDelete(const FileName: string): Boolean;
 function FileExists(const FileName: string): Boolean;
-/// <summary>procedure FileHistory Creates a list of history files of a specified
-/// source file. Each version of the file get's an extention .~<Nr>~ The file with
-/// the lowest number is the youngest file.
-/// </summary>
-/// <param name="FileName"> (string) Name of the source file</param>
-/// <param name="HistoryPath"> (string) Folder where the history files should be
-/// created. If no folder is defined the folder of the source file is used.</param>
-/// <param name="MaxHistoryCount"> (Integer) Max number of files</param>
-/// <param name="MinFileDate"> (TDateTime) Timestamp how old the file has to be to
-/// create a new history version. For example: NOW-1/24 => Only once per hour a new
-/// history file is created. Default 0 means allways
-/// <param name="ReplaceExtention"> (boolean) Flag to define that the history file
-/// extention should replace the current extention or should be added at the
-/// end</param>
-/// </param>
+
 {$IFDEF MSWINDOWS}
-procedure FileHistory(const FileName: string; HistoryPath: string = ''; MaxHistoryCount: Integer = 100; MinFileDate:
-    TDateTime = 0; ReplaceExtention: Boolean = true);
-function FileMove(const ExistingFileName, NewFileName: string; ReplaceExisting: Boolean = False): Boolean;
-function FileRestore(const FileName: string): Boolean;
-{$ENDIF}
-function GetBackupFileName(const FileName: string): string;
-function IsBackupFileName(const FileName: string): Boolean;
-function FileGetDisplayName(const FileName: string): string;
-{$IFDEF MSWINDOWS}
-function FileGetGroupName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
 function FileGetOwnerName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
 function FileGetSize(const FileName: string): Int64;
-function FileGetTypeName(const FileName: string): string;
 {$ENDIF MSWINDOWS}
-function FileGetTempName(const Prefix: string): string;
 function FindUnusedFileName(FileName: string; const FileExt: string; NumberPrefix: string = ''): string;
 function ForceDirectories(Name: string): Boolean;
 function GetDirectorySize(const Path: string): Int64;
@@ -666,21 +632,9 @@ type
     FFileFlags: TFileFlags;
     FItemList: TStringList;
     FItems: TStringList;
-    FLanguages: array of TLangIdRec;
-    FLanguageIndex: Integer;
-    FTranslations: array of TLangIdRec;
     function GetFixedInfo: TVSFixedFileInfo;
     function GetItems: TStrings;
-    function GetLanguageCount: Integer;
-    function GetLanguageIds(Index: Integer): string;
-    function GetLanguageNames(Index: Integer): string;
-    function GetLanguages(Index: Integer): TLangIdRec;
-    function GetTranslationCount: Integer;
-    function GetTranslations(Index: Integer): TLangIdRec;
-    procedure SetLanguageIndex(const Value: Integer);
   protected
-    procedure CreateItemsForLanguage;
-    procedure CheckLanguageIndex(Value: Integer);
     procedure ExtractData;
     procedure ExtractFlags;
     function GetBinFileVersion: string;
@@ -710,10 +664,6 @@ type
     {$ENDIF MSWINDOWS}
     destructor Destroy; override;
     function GetCustomFieldValue(const FieldName: string): string;
-    class function VersionLanguageId(const LangIdRec: TLangIdRec): string;
-    class function VersionLanguageName(const LangId: Word): string;
-    class function FileHasVersionInfo(const FileName: string): boolean;
-    function TranslationMatchesLanguages(Exact: Boolean = True): Boolean;
     property BinFileVersion: string read GetBinFileVersion;
     property BinProductVersion: string read GetBinProductVersion;
     property Comments: string index 1 read GetVersionKeyValue;
@@ -731,11 +681,6 @@ type
     property FileVersionRelease: string read GetFileVersionRelease;
     property Items: TStrings read GetItems;
     property InternalName: string index 5 read GetVersionKeyValue;
-    property LanguageCount: Integer read GetLanguageCount;
-    property LanguageIds[Index: Integer]: string read GetLanguageIds;
-    property LanguageIndex: Integer read FLanguageIndex write SetLanguageIndex;
-    property Languages[Index: Integer]: TLangIdRec read GetLanguages;
-    property LanguageNames[Index: Integer]: string read GetLanguageNames;
     property LegalCopyright: string index 6 read GetVersionKeyValue;
     property LegalTradeMarks: string index 7 read GetVersionKeyValue;
     property OriginalFilename: string index 8 read GetVersionKeyValue;
@@ -747,16 +692,10 @@ type
     property ProductVersionMinor: string read GetProductVersionMinor;
     property ProductVersionRelease: string read GetProductVersionRelease;
     property SpecialBuild: string index 11 read GetVersionKeyValue;
-    property TranslationCount: Integer read GetTranslationCount;
-    property Translations[Index: Integer]: TLangIdRec read GetTranslations;
   end;
 
 function OSIdentToString(const OSIdent: DWORD): string;
 function OSFileTypeToString(const OSFileType: DWORD; const OSFileSubType: DWORD = 0): string;
-
-function VersionResourceAvailable(const FileName: string): Boolean; overload;
-function VersionResourceAvailable(const Window: HWND): Boolean; overload;
-function VersionResourceAvailable(const Module: HMODULE): Boolean; overload;
 
 function WindowToModuleFileName(const Window: HWND): string;
 {$ENDIF MSWINDOWS}
@@ -785,15 +724,6 @@ function VersionFixedFileInfoString(const FileName: string; VersionFormat: TFile
 //
 // TStream descendent classes for dealing with temporary files and for using file mapping objects.
 type
-  TJclTempFileStream = class(THandleStream)
-  private
-    FFileName: string;
-  public
-    constructor Create(const Prefix: string);
-    destructor Destroy; override;
-    property FileName: string read FFileName;
-  end;
-
   {$IFDEF MSWINDOWS}
 
   TJclCustomFileMapping = class;
@@ -1030,29 +960,6 @@ type
   EJclFileMappingViewError = class(EJclWin32Error);
   {$ENDIF MSWINDOWS}
 
-function SamePath(const Path1, Path2: string): Boolean;
-
-// functions to add/delete paths from a separated list of paths
-// on windows the separator is a semi-colon ';'
-// on linux the separator is a colon ':'
-// add items at the end
-procedure PathListAddItems(var List: string; const Items: string);
-// add items at the end if they are not present
-procedure PathListIncludeItems(var List: string; const Items: string);
-// delete multiple items
-procedure PathListDelItems(var List: string; const Items: string);
-// delete one item
-procedure PathListDelItem(var List: string; const Index: Integer);
-// return the number of item
-function PathListItemCount(const List: string): Integer;
-// return the Nth item
-function PathListGetItem(const List: string; const Index: Integer): string;
-// set the Nth item
-procedure PathListSetItem(var List: string; const Index: Integer; const Value: string);
-// return the index of an item
-function PathListItemIndex(const List, Item: string): Integer;
-
-
 // additional functions to access the commandline parameters of an application
 
 // returns the name of the command line parameter at position index, which is
@@ -1102,7 +1009,7 @@ uses
   System.Math,
   {$IFDEF MSWINDOWS}
   Winapi.ShellApi, Winapi.ActiveX, System.Win.ComObj, Winapi.ShlObj,
-  JclShell, JclSysInfo, JclSecurity,
+  JclSysInfo, JclSecurity,
   {$ENDIF MSWINDOWS}
   {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF HAS_UNIT_CHARACTER}
@@ -1135,27 +1042,6 @@ const
   ERROR_NO_MORE_FILES  = -1;
   INVALID_HANDLE_VALUE = THandle(-1);
 {$ENDIF UNIX}
-
-//=== { TJclTempFileStream } =================================================
-
-constructor TJclTempFileStream.Create(const Prefix: string);
-var
-  FileHandle: THandle;
-begin
-  FFileName := Prefix;
-  FileHandle := FileCreateTemp(FFileName);
-  // (rom) is it really wise to throw an exception before calling inherited?
-  if FileHandle = INVALID_HANDLE_VALUE then
-    raise EJclTempFileStreamError.CreateRes(@RsFileStreamCreate);
-  inherited Create(FileHandle);
-end;
-
-destructor TJclTempFileStream.Destroy;
-begin
-  if THandle(Handle) <> INVALID_HANDLE_VALUE then
-    FileClose(Handle);
-  inherited Destroy;
-end;
 
 //=== { TJclFileMappingView } ================================================
 
@@ -2508,107 +2394,6 @@ begin
   end;
 end;
 
-function ShellGetLongPathName(const Path: string): string;
-{$IFDEF FPC}
-// As of 2004-10-17, FPC's ShlObj unit is just a dummy
-begin
-  Result := Path;
-end;
-{$ElSE ~FPC}
-var
-  PIDL: PItemIDList;
-  Desktop: IShellFolder;
-  {$IFNDEF SUPPORTS_UNICODE}
-  AnsiName: string;
-  WideName: array [0..MAX_PATH] of WideChar;
-  {$ENDIF ~SUPPORTS_UNICODE}
-  Eaten, Attr: ULONG; // both unused but API requires them (incorrect translation)
-begin
-  Result := Path;
-  if Path <> '' then
-  begin
-    if Succeeded(SHGetDesktopFolder(Desktop)) then
-    begin
-      {$IFDEF SUPPORTS_UNICODE}
-      if Succeeded(Desktop.ParseDisplayName(0, nil, PChar(Path), Eaten, PIDL, Attr)) then
-      try
-        SetLength(Result, MAX_PATH);
-        if SHGetPathFromIDList(PIDL, PChar(Result)) then
-          StrResetLength(Result);
-      finally
-        CoTaskMemFree(PIDL);
-      end;
-      {$ELSE ~SUPPORTS_UNICODE}
-      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, PAnsiChar(Path), -1, WideName, MAX_PATH);
-      if Succeeded(Desktop.ParseDisplayName(0, nil, WideName, Eaten, PIDL, Attr)) then
-      try
-        SetLength(AnsiName, MAX_PATH);
-        if SHGetPathFromIDList(PIDL, PChar(AnsiName)) then
-          StrResetLength(AnsiName);
-        Result := AnsiName;
-      finally
-        CoTaskMemFree(PIDL);
-      end;
-      {$ENDIF ~SUPPORTS_UNICODE}
-    end;
-  end;
-end;
-{$ENDIF ~FPC}
-
-{ TODO : Move RTDL code over to JclWin32 when JclWin32 gets overhauled. }
-var
-  _Kernel32Handle: TModuleHandle = INVALID_MODULEHANDLE_VALUE;
-  _GetLongPathName: function (lpszShortPath: PChar; lpszLongPath: PChar;
-    cchBuffer: DWORD): DWORD; stdcall;
-
-function Kernel32Handle: HMODULE;
-begin
-  JclSysUtils.LoadModule(_Kernel32Handle, kernel32);
-  Result := _Kernel32Handle;
-end;
-
-function RtdlGetLongPathName(const Path: string): string;
-begin
-  Result := Path;
-  if not Assigned(_GetLongPathName) then
-    _GetLongPathName := GetModuleSymbol(Kernel32Handle, 'GetLongPathName' + AWSuffix);
-  if not Assigned(_GetLongPathName) then
-    Result := ShellGetLongPathName(Path)
-  else
-  begin
-    SetLength(Result, MAX_PATH);
-    SetLength(Result, _GetLongPathName(PChar(Path), PChar(Result), MAX_PATH));
-  end;
-end;
-
-function PathGetLongName(const Path: string): string;
-begin
-  if Pos('::', Path) > 0 then // Path contains '::{<GUID>}'
-    Result := ShellGetLongPathName(Path)
-  else
-    Result := RtdlGetLongPathName(Path);
-
-  if Result = '' then
-    Result := Path;
-end;
-
-function PathGetShortName(const Path: string): string;
-var
-  Required: Integer;
-begin
-  Result := Path;
-  Required := GetShortPathName(PChar(Path), nil, 0);
-  if Required <> 0 then
-  begin
-    SetLength(Result, Required);
-    Required := GetShortPathName(PChar(Path), PChar(Result), Required);
-    if (Required <> 0) and (Required = Length(Result) - 1) then
-      SetLength(Result, Required)
-    else
-      Result := Path;
-  end;
-end;
-
 {$ENDIF MSWINDOWS}
 
 {$IFNDEF UNIX}
@@ -3295,14 +3080,6 @@ end;
 
 {$IFNDEF FPC}  // needs JclShell
 
-function DeleteDirectory(const DirectoryName: string; MoveToRecycleBin: Boolean): Boolean;
-begin
-  if MoveToRecycleBin then
-    Result := SHDeleteFolder(0, DirectoryName, [doSilent, doAllowUndo])
-  else
-    Result := DelTree(DirectoryName);
-end;
-
 function CopyDirectory(ExistingDirectoryName, NewDirectoryName: string): Boolean;
 var
   SH: SHFILEOPSTRUCT;
@@ -3442,64 +3219,6 @@ begin
   end;
 end;
 
-function FileCreateTemp(var Prefix: string): THandle;
-var
-  TempName: string;
-begin
-  Result := INVALID_HANDLE_VALUE;
-  TempName := FileGetTempName(Prefix);
-  if TempName <> '' then
-  begin
-    Result := CreateFile(PChar(TempName), GENERIC_READ or GENERIC_WRITE, 0, nil,
-      OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE, 0);
-    // In certain situations it's possible that CreateFile fails yet the file is actually created,
-    // therefore explicitly delete it upon failure.
-    if Result = INVALID_HANDLE_VALUE then
-      DeleteFile(TempName);
-    Prefix := TempName;
-  end;
-end;
-{$ENDIF MSWINDOWS}
-{$IFDEF POSIX}
-Const
-  clib = 'c';
-
-function mkstemp(__template:Pchar):longint;cdecl;external clib name 'mkstemp';
-
-function FileCreateTemp(var Prefix: string): THandle;
-var
-  Template: string;
-begin
-  // The mkstemp function generates a unique file name just as mktemp does, but
-  // it also opens the file for you with open. If successful, it modifies
-  // template in place and returns a file descriptor for that file open for
-  // reading and writing. If mkstemp cannot create a uniquely-named file, it
-  // returns -1. If template does not end with `XXXXXX', mkstemp returns -1 and
-  // does not modify template.
-
-  // The file is opened using mode 0600. If the file is meant to be used by
-  // other users this mode must be changed explicitly.
-
-  // Unlike mktemp, mkstemp is actually guaranteed to create a unique file that
-  // cannot possibly clash with any other program trying to create a temporary
-  // file. This is because it works by calling open with the O_EXCL flag, which
-  // says you want to create a new file and get an error if the file already
-  // exists.
-  Template := Prefix + 'XXXXXX';
-  Result := mkstemp(PChar(Template));
-  Prefix := Template;
-end;
-{$ENDIF POSIX}
-
-{$IFDEF MSWINDOWS}
-function FileBackup(const FileName: string; Move: Boolean = False): Boolean;
-begin
-  if Move then
-    Result := FileMove(FileName, GetBackupFileName(FileName), True)
-  else
-    Result := FileCopy(FileName, GetBackupFileName(FileName), True);
-end;
-
 function FileCopy(const ExistingFileName, NewFileName: string; ReplaceExisting: Boolean = False): Boolean;
 var
   {$IFDEF UNIX}
@@ -3559,13 +3278,10 @@ begin
   {$ENDIF COMPILER10_UP}
 end;
 
-function FileDelete(const FileName: string; MoveToRecycleBin: Boolean = False): Boolean;
+function FileDelete(const FileName: string): Boolean;
 {$IFDEF MSWINDOWS}
 begin
-  if MoveToRecycleBin then
-    Result := SHDeleteFiles(0, FileName, [doSilent, doAllowUndo, doFilesOnly])
-  else
-    Result := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.DeleteFile(PChar(FileName));
+  Result := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.DeleteFile(PChar(FileName));
 {$ELSE}
   { TODO : implement MoveToRecycleBin for appropriate Desktops (e.g. KDE) }
 begin
@@ -3595,53 +3311,6 @@ begin
 end;
 
 {$IFDEF MSWINDOWS}
-procedure FileHistory(const FileName: string; HistoryPath: string = ''; MaxHistoryCount: Integer = 100; MinFileDate:
-    TDateTime = 0; ReplaceExtention: Boolean = true);
-
-  Function Extention (Number : Integer) : String;
-  begin
-    Result := inttostr(Number);
-    while Length(Result) < 3 do
-      Result := '0' + Result;
-    Result := '.~'+Result+'~';
-  end;
-
-  procedure RenameToNumber(const RenameFileName: string; Number: Integer);
-  var
-    f1: string;
-    f2: string;
-  begin
-    f1 := ChangeFileExt(RenameFileName,Extention(Number-1));
-    f2 := ChangeFileExt(RenameFileName,Extention(Number));
-    if FileExists(f2) then
-      if Number >= MaxHistoryCount then
-        if not FileDelete(f2) then
-          Exception.Create('Unable to delete file "' + f2 + '".')
-        else
-      else
-        RenameToNumber(RenameFileName, Number + 1);
-    if FileExists(f1) then
-      if not FileMove(f1, f2, true) then
-        Exception.Create('Unable to rename file "' + f1 + '" to "' + f2 + '".')
-  end;
-
-Var FirstFile : string;
-begin
-  // TODO -cMM: FileHistory default body inserted
-  if not FileExists(FileName) or (MaxHistoryCount <= 0) then
-    Exit;
-  if HistoryPath = '' then
-    HistoryPath := ExtractFilePath(FileName);
-  FirstFile := PathAppend(HistoryPath, ExtractFileName(FileName));
-  if ReplaceExtention then
-    FirstFile := ChangeFileExt(FirstFile, Extention(1))
-  else
-    FirstFile := FirstFile+Extention(1);
-  if (FileDateTime(FirstFile) > MinFileDate) and (MinFileDate <> 0) then
-    Exit;
-  RenameToNumber(FirstFile, 2);
-  FileCopy(FileName, FirstFile, True);
-end;
 
 function FileMove(const ExistingFileName, NewFileName: string; ReplaceExisting: Boolean = False): Boolean;
 {$IFDEF MSWINDOWS}
@@ -3663,98 +3332,7 @@ begin
   end;
 end;
 
-function FileRestore(const FileName: string): Boolean;
-var
-  TempFileName: string;
-begin
-  Result := False;
-  TempFileName := FileGetTempName('');
-
-  if FileMove(GetBackupFileName(FileName), TempFileName, True) then
-    if FileBackup(FileName, False) then
-      Result := FileMove(TempFileName, FileName, True);
-end;
 {$ENDIF}
-
-function GetBackupFileName(const FileName: string): string;
-var
-  NewExt: string;
-begin
-  NewExt := ExtractFileExt(FileName);
-  if Length(NewExt) > 0 then
-  begin
-    NewExt[1] := '~';
-    NewExt := '.' + NewExt
-  end
-  else
-    NewExt := '.~';
-  Result := ChangeFileExt(FileName, NewExt);
-end;
-
-function IsBackupFileName(const FileName: string): Boolean;
-begin
-  Result := (pos('.~', ExtractFileExt(FileName)) = 1);
-end;
-
-function FileGetDisplayName(const FileName: string): string;
-{$IFDEF MSWINDOWS}
-var
-  FileInfo: TSHFileInfo;
-begin
-  ResetMemory(FileInfo, SizeOf(FileInfo));
-  if SHGetFileInfo(PChar(FileName), 0, FileInfo, SizeOf(FileInfo), SHGFI_DISPLAYNAME) <> 0 then
-    Result := FileInfo.szDisplayName
-  else
-    Result := FileName;
-end;
-{$ELSE ~MSWINDOWS}
-begin
-  { TODO -cHelp : mention this reduced solution }
-  Result := FileName;
-end;
-{$ENDIF ~MSWINDOWS}
-
-{$IFDEF MSWINDOWS}
-function FileGetGroupName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
-var
-  DomainName: WideString;
-  TmpResult: WideString;
-  pSD: PSecurityDescriptor;
-  BufSize: DWORD;
-begin
-  if IsWinNT then
-  begin
-    BufSize := 0;
-    GetFileSecurity(PChar(FileName), GROUP_SECURITY_INFORMATION, nil, 0, BufSize);
-    if BufSize > 0 then
-    begin
-      GetMem(pSD, BufSize);
-      GetFileSecurity(PChar(FileName), GROUP_SECURITY_INFORMATION,
-        pSD, BufSize, BufSize);
-      LookupAccountBySid(Pointer(TJclAddr(pSD) + TJclAddr(pSD^.Group)), TmpResult, DomainName, True);
-      FreeMem(pSD);
-      Result := Trim(TmpResult);
-    end;
-  end;
-end;
-{$ENDIF MSWINDOWS}
-{$IFDEF HAS_UNIT_LIBC}
-function FileGetGroupName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
-var
-  Buf: TStatBuf64;
-  ResultBuf: TGroup;
-  ResultBufPtr: PGroup;
-  Buffer: array of Char;
-begin
-  if GetFileStatus(FileName, Buf, ResolveSymLinks) = 0 then
-  begin
-    SetLength(Buffer, 128);
-    while getgrgid_r(Buf.st_gid, ResultBuf, @Buffer[0], Length(Buffer), ResultBufPtr) = ERANGE do
-      SetLength(Buffer, Length(Buffer) * 2);
-    Result := ResultBuf.gr_name;
-  end;
-end;
-{$ENDIF HAS_UNIT_LIBC}
 
 {$IFDEF MSWINDOWS}
 function FileGetOwnerName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
@@ -3840,56 +3418,6 @@ function GetTempFileName(lpPathName, lpPrefixString: PChar;
   uUnique: UINT; lpTempFileName: PChar): UINT; stdcall;
 external kernel32 name 'GetTempFileNameA';
 {$ENDIF FPC}
-{$ENDIF MSWINDOWS}
-
-function FileGetTempName(const Prefix: string): string;
-{$IF Defined(MSWINDOWS)}
-var
-  TempPath, TempFile: string;
-  R: Cardinal;
-begin
-  Result := '';
-  TempPath := PathGetTempPath;
-  if TempPath <> '' then
-  begin
-    SetLength(TempFile, MAX_PATH);
-    R := GetTempFileName(PChar(TempPath), PChar(Prefix), 0, PChar(TempFile));
-    if R <> 0 then
-    begin
-      StrResetLength(TempFile);
-      Result := TempFile;
-    end;
-  end;
-{$ELSEIF Defined(FPC)}
-begin
-  if Prefix <> '' then
-    Result := SysUtils.GetTempFileName(PathGetTempPath, Prefix)
-  else
-    Result := SysUtils.GetTempFileName;
-{$ELSE}
-  {$MESSAGE Error 'platform to-do'}
-{$ENDIF}
-end;
-
-{$IFDEF MSWINDOWS}
-function FileGetTypeName(const FileName: string): string;
-var
-  FileInfo: TSHFileInfo;
-  RetVal: DWORD;
-begin
-  ResetMemory(FileInfo, SizeOf(FileInfo));
-  RetVal := SHGetFileInfo(PChar(FileName), 0, FileInfo, SizeOf(FileInfo),
-    SHGFI_TYPENAME or SHGFI_USEFILEATTRIBUTES);
-  if RetVal <> 0 then
-    Result := FileInfo.szTypeName;
-  if (RetVal = 0) or (Trim(Result) = '') then
-  begin
-    // Lookup failed so mimic explorer behaviour by returning "XYZ File"
-    Result := ExtractFileExt(FileName);
-    Delete(Result, 1, 1);
-    Result := TrimLeft(UpperCase(Result) + LoadResString(@RsDefaultFileTypeName));
-  end;
-end;
 {$ENDIF MSWINDOWS}
 
 function FindUnusedFileName(FileName: string; const FileExt: string; NumberPrefix: string = ''): string;
@@ -4283,22 +3811,28 @@ end;
 {$ENDIF HAS_UNIT_LIBC}
 
 function GetModulePath(const Module: HMODULE): string;
+const
+  BufferSize = 4096;
 var
+  Buffer: PWideChar;
   L: Integer;
 begin
-  L := MAX_PATH + 1;
-  SetLength(Result, L);
-  {$IFDEF MSWINDOWS}
-  L := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetModuleFileName(Module, Pointer(Result), L);
-  {$ENDIF MSWINDOWS}
-  {$IFDEF UNIX}
-  {$IFDEF FPC}
-  L := 0; // FIXME
-  {$ELSE ~FPC}
-  L := GetModuleFileName(Module, Pointer(Result), L);
-  {$ENDIF ~FPC}
-  {$ENDIF UNIX}
-  SetLength(Result, L);
+  GetMem(Buffer, BufferSize * SizeOf(WideChar));
+  try
+    {$IFDEF MSWINDOWS}
+    L := Winapi.Windows.GetModuleFileNameW(Module, Buffer, BufferSize);
+    {$ENDIF MSWINDOWS}
+    {$IFDEF UNIX}
+    {$IFDEF FPC}
+    L := 0; // FIXME
+    {$ELSE ~FPC}
+    L := GetModuleFileName(Module, Buffer, BufferSize);
+    {$ENDIF ~FPC}
+    {$ENDIF UNIX}
+    SetString(Result, Buffer, L);
+  finally
+    FreeMem(Buffer);
+  end;
 end;
 
 {$IFDEF MSWINDOWS}
@@ -4831,35 +4365,6 @@ begin
   Result := TrimLeft(Result);
 end;
 
-function VersionResourceAvailable(const FileName: string): Boolean;
-var
-  Size: DWORD;
-  Handle: DWORD;
-  Buffer: string;
-begin
-  Result := False;
-  Handle := 0;
-  Size := GetFileVersionInfoSize(PChar(FileName), Handle);
-  if Size > 0 then
-  begin
-    SetLength(Buffer, Size);
-    Result := GetFileVersionInfo(PChar(FileName), Handle, Size, PChar(Buffer));
-  end;
-end;
-
-function VersionResourceAvailable(const Window: HWND): Boolean;
-begin
-  Result := VersionResourceAvailable(WindowToModuleFileName(Window));
-end;
-
-function VersionResourceAvailable(const Module: HMODULE): Boolean;
-begin
-  if Module <> 0 then
-    Result :=VersionResourceAvailable(GetModulePath(Module))
-  else
-    raise EJclError.CreateResFmt(@RsEModuleNotValid, [Module]);
-end;
-
 function WindowToModuleFileName(const Window: HWND): string;
 type
   {$IFDEF SUPPORTS_UNICODE}
@@ -5086,29 +4591,6 @@ begin
   inherited Destroy;
 end;
 
-class function TJclFileVersionInfo.FileHasVersionInfo(const FileName: string): boolean;
-var
-  Dummy: DWord;
-begin
-  Result := GetFileVersionInfoSize(PChar(FileName), Dummy) <> 0;
-end;
-
-procedure TJclFileVersionInfo.CheckLanguageIndex(Value: Integer);
-begin
-  if (Value < 0) or (Value >= LanguageCount) then
-    raise EJclFileVersionInfoError.CreateRes(@RsFileUtilsLanguageIndex);
-end;
-
-procedure TJclFileVersionInfo.CreateItemsForLanguage;
-var
-  I: Integer;
-begin
-  Items.Clear;
-  for I := 0 to FItemList.Count - 1 do
-    if Integer(FItemList.Objects[I]) = FLanguageIndex then
-      Items.AddObject(FItemList[I], Pointer(FLanguages[FLanguageIndex].Pair));
-end;
-
 procedure TJclFileVersionInfo.ExtractData;
 var
   Data, EndOfData: PAnsiChar;
@@ -5194,7 +4676,6 @@ var
   var
     EndPtr, EndStringPtr: PAnsiChar;
     LangIndex: Integer;
-    LangIdRec: TLangIdRec;
     Value: string;
   begin
     EndPtr := Data + Size;
@@ -5209,10 +4690,7 @@ var
         Break;
       end;
       Padding(Data);
-      LangIdRec.LangId := StrToIntDef('$' + Copy(Key, 1, 4), 0);
-      LangIdRec.CodePage := StrToIntDef('$' + Copy(Key, 5, 4), 0);
-      SetLength(FLanguages, LangIndex + 1);
-      FLanguages[LangIndex] := LangIdRec;
+
       EndStringPtr := Data + Len - HeaderSize;
       while not Error and (Data < EndStringPtr) do
       begin
@@ -5253,17 +4731,15 @@ var
 
   procedure ProcessVarInfo;
   var
-    TranslationIndex: Integer;
+    index: Integer;
+    count: Integer;
   begin
     GetHeader; // Var
     if SameText(Key, 'Translation') then
     begin
-      SetLength(FTranslations, ValueLen div SizeOf(TLangIdRec));
-      for TranslationIndex := 0 to Length(FTranslations) - 1 do
-      begin
-        FTranslations[TranslationIndex] := PLangIdRec(Data)^;
-        Inc(Data, SizeOf(TLangIdRec));
-      end;
+      count := ValueLen div SizeOf(TLangIdRec);
+      for index := 0 to count - 1 do
+        Inc(data, SizeOf(TLangIdRec));
     end;
   end;
 
@@ -5296,7 +4772,6 @@ begin
         Break;
     end;
     ExtractFlags;
-    CreateItemsForLanguage;
   end;
   if Error then
     raise EJclFileVersionInfoError.CreateRes(@RsFileUtilsNoVersionInfo);
@@ -5422,39 +4897,6 @@ begin
   Result := FItems;
 end;
 
-function TJclFileVersionInfo.GetLanguageCount: Integer;
-begin
-  Result := Length(FLanguages);
-end;
-
-function TJclFileVersionInfo.GetLanguageIds(Index: Integer): string;
-begin
-  CheckLanguageIndex(Index);
-  Result := VersionLanguageId(FLanguages[Index]);
-end;
-
-function TJclFileVersionInfo.GetLanguages(Index: Integer): TLangIdRec;
-begin
-  CheckLanguageIndex(Index);
-  Result := FLanguages[Index];
-end;
-
-function TJclFileVersionInfo.GetLanguageNames(Index: Integer): string;
-begin
-  CheckLanguageIndex(Index);
-  Result := VersionLanguageName(FLanguages[Index].LangId);
-end;
-
-function TJclFileVersionInfo.GetTranslationCount: Integer;
-begin
-  Result := Length(FTranslations);
-end;
-
-function TJclFileVersionInfo.GetTranslations(Index: Integer): TLangIdRec;
-begin
-  Result := FTranslations[Index];
-end;
-
 function TJclFileVersionInfo.GetProductVersionBuild: string;
 var
   Left: Integer;
@@ -5504,51 +4946,6 @@ begin
   Result := Items.Values[VerKeyNames[Index]];
 end;
 
-procedure TJclFileVersionInfo.SetLanguageIndex(const Value: Integer);
-begin
-  CheckLanguageIndex(Value);
-  if FLanguageIndex <> Value then
-  begin
-    FLanguageIndex := Value;
-    CreateItemsForLanguage;
-  end;
-end;
-
-function TJclFileVersionInfo.TranslationMatchesLanguages(Exact: Boolean): Boolean;
-var
-  TransIndex, LangIndex: Integer;
-  TranslationPair: DWORD;
-begin
-  Result := (LanguageCount = TranslationCount) or (not Exact and (TranslationCount > 0));
-  if Result then
-    for TransIndex := 0 to TranslationCount - 1 do
-    begin
-      TranslationPair := FTranslations[TransIndex].Pair;
-      LangIndex := LanguageCount - 1;
-      while (LangIndex >= 0) and (TranslationPair <> FLanguages[LangIndex].Pair) do
-        Dec(LangIndex);
-      if LangIndex < 0 then
-      begin
-        Result := False;
-        Break;
-      end;
-    end;
-end;
-
-class function TJclFileVersionInfo.VersionLanguageId(const LangIdRec: TLangIdRec): string;
-begin
-  with LangIdRec do
-    Result := Format('%.4x%.4x', [LangId, CodePage]);
-end;
-
-class function TJclFileVersionInfo.VersionLanguageName(const LangId: Word): string;
-var
-  R: DWORD;
-begin
-  SetLength(Result, MAX_PATH);
-  R := VerLanguageName(LangId, PChar(Result), MAX_PATH);
-  SetLength(Result, R);
-end;
 {$ENDIF MSWINDOWS}
 
 //=== { TJclFileMaskComparator } =============================================
@@ -6832,143 +6229,6 @@ begin
   Result := TJclFileEnumerator.Create;
 end;
 {$ENDIF}
-
-function SamePath(const Path1, Path2: string): Boolean;
-begin
-  {$IFDEF MSWINDOWS}
-  Result := AnsiSameText(PathGetLongName(Path1), PathGetLongName(Path2));
-  {$ELSE ~MSWINDOWS}
-  Result := Path1 = Path2;
-  {$ENDIF ~MSWINDOWS}
-end;
-
-// add items at the end
-procedure PathListAddItems(var List: string; const Items: string);
-begin
-  ListAddItems(List, DirSeparator, Items);
-end;
-
-// add items at the end if they are not present
-procedure PathListIncludeItems(var List: string; const Items: string);
-var
-  StrList, NewItems: TStringList;
-  IndexNew, IndexList: Integer;
-  Item: string;
-  Duplicate: Boolean;
-begin
-  StrList := TStringList.Create;
-  try
-    StrToStrings(List, DirSeparator, StrList);
-
-    NewItems := TStringList.Create;
-    try
-      StrToStrings(Items, DirSeparator, NewItems);
-
-      for IndexNew := 0 to NewItems.Count - 1 do
-      begin
-        Item := NewItems.Strings[IndexNew];
-
-        Duplicate := False;
-        for IndexList := 0 to StrList.Count - 1 do
-          if SamePath(Item, StrList.Strings[IndexList]) then
-        begin
-          Duplicate := True;
-          Break;
-        end;
-
-        if not Duplicate then
-          StrList.Add(Item);
-      end;
-
-      List := StringsToStr(StrList, DirSeparator);
-    finally
-      NewItems.Free;
-    end;
-  finally
-    StrList.Free;
-  end;
-end;
-
-// delete multiple items
-procedure PathListDelItems(var List: string; const Items: string);
-var
-  StrList, RemItems: TStringList;
-  IndexRem, IndexList: Integer;
-  Item: string;
-begin
-  StrList := TStringList.Create;
-  try
-    StrToStrings(List, DirSeparator, StrList);
-
-    RemItems := TStringList.Create;
-    try
-      StrToStrings(Items, DirSeparator, RemItems);
-
-      for IndexRem := 0 to RemItems.Count - 1 do
-      begin
-        Item := RemItems.Strings[IndexRem];
-
-        for IndexList := StrList.Count - 1 downto 0 do
-          if SamePath(Item, StrList.Strings[IndexList]) then
-            StrList.Delete(IndexList);
-      end;
-
-      List := StringsToStr(StrList, DirSeparator);
-    finally
-      RemItems.Free;
-    end;
-  finally
-    StrList.Free;
-  end;
-end;
-
-// delete one item
-procedure PathListDelItem(var List: string; const Index: Integer);
-begin
-  ListDelItem(List, DirSeparator, Index);
-end;
-
-// return the number of item
-function PathListItemCount(const List: string): Integer;
-begin
-  Result := ListItemCount(List, DirSeparator);
-end;
-
-// return the Nth item
-function PathListGetItem(const List: string; const Index: Integer): string;
-begin
-  Result := ListGetItem(List, DirSeparator, Index);
-end;
-
-// set the Nth item
-procedure PathListSetItem(var List: string; const Index: Integer; const Value: string);
-begin
-  ListSetItem(List, DirSeparator, Index, Value);
-end;
-
-// return the index of an item
-function PathListItemIndex(const List, Item: string): Integer;
-var
-  StrList: TStringList;
-  IndexList: Integer;
-begin
-  StrList := TStringList.Create;
-  try
-    StrToStrings(List, DirSeparator, StrList);
-
-    Result := -1;
-
-    for IndexList := 0 to StrList.Count - 1 do
-      if SamePath(StrList.Strings[IndexList], Item) then
-    begin
-      Result := IndexList;
-      Break;
-    end;
-  finally
-    StrList.Free;
-  end;
-end;
-
 
 // additional functions to access the commandline parameters of an application
 

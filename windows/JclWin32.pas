@@ -3083,31 +3083,6 @@ function SetWaitableTimer(hTimer: THandle; var lpDueTime: TLargeInteger;
   lpArgToCompletionRoutine: Pointer; fResume: BOOL): BOOL; stdcall;
   {$EXTERNALSYM SetWaitableTimer}
 
-// WinBase.h line 8839
-
-function SetFileSecurityA(lpFileName: LPCSTR; SecurityInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR): BOOL; stdcall;
-{$EXTERNALSYM SetFileSecurityA}
-function SetFileSecurityW(lpFileName: LPCWSTR; SecurityInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR): BOOL; stdcall;
-{$EXTERNALSYM SetFileSecurityW}
-function SetFileSecurity(lpFileName: LPCTSTR; SecurityInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR): BOOL; stdcall;
-{$EXTERNALSYM SetFileSecurity}
-
-function GetFileSecurityA(lpFileName: LPCSTR; RequestedInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR; nLength: DWORD;
-  var lpnLengthNeeded: DWORD): BOOL; stdcall;
-{$EXTERNALSYM GetFileSecurityA}
-function GetFileSecurityW(lpFileName: LPCWSTR; RequestedInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR; nLength: DWORD;
-  var lpnLengthNeeded: DWORD): BOOL; stdcall;
-{$EXTERNALSYM GetFileSecurityW}
-function GetFileSecurity(lpFileName: LPCTSTR; RequestedInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR; nLength: DWORD;
-  var lpnLengthNeeded: DWORD): BOOL; stdcall;
-{$EXTERNALSYM GetFileSecurity}
-
 // WinBase.h line 10251
 
 function SetVolumeMountPointW(lpszVolumeMountPoint, lpszVolumeName: LPCWSTR): BOOL; stdcall;
@@ -8661,95 +8636,6 @@ function SetWaitableTimer(hTimer: THandle; var lpDueTime: TLargeInteger;
 begin
   GetProcedureAddress(Pointer(@_SetWaitableTimer), kernel32, 'SetWaitableTimer');
   Result := _SetWaitableTimer(hTimer, lpDueTime, lPeriod, pfnCompletionRoutine, lpArgToCompletionRoutine, fResume);
-end;
-
-type
-  TSetFileSecurityA = function (lpFileName: LPCSTR; SecurityInformation: SECURITY_INFORMATION;
-    pSecurityDescriptor: PSECURITY_DESCRIPTOR): BOOL; stdcall;
-var
-  _SetFileSecurityA: TSetFileSecurityA = nil;
-
-function SetFileSecurityA(lpFileName: LPCSTR; SecurityInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR): BOOL;
-begin
-  GetProcedureAddress(Pointer(@_SetFileSecurityA), advapi32, 'SetFileSecurityA');
-  Result := _SetFileSecurityA(lpFileName, SecurityInformation, pSecurityDescriptor);
-end;
-
-type
-  TSetFileSecurityW = function (lpFileName: LPCWSTR; SecurityInformation: SECURITY_INFORMATION;
-    pSecurityDescriptor: PSECURITY_DESCRIPTOR): BOOL; stdcall;
-
-var
-  _SetFileSecurityW: TSetFileSecurityW = nil;
-
-function SetFileSecurityW(lpFileName: LPCWSTR; SecurityInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR): BOOL;
-begin
-  GetProcedureAddress(Pointer(@_SetFileSecurityW), advapi32, 'SetFileSecurityW');
-  Result := _SetFileSecurityW(lpFileName, SecurityInformation, pSecurityDescriptor);
-end;
-
-type
-  TSetFileSecurity = function (lpFileName: LPCTSTR; SecurityInformation: SECURITY_INFORMATION;
-    pSecurityDescriptor: PSECURITY_DESCRIPTOR): BOOL; stdcall;
-
-var
-  _SetFileSecurity: TSetFileSecurity = nil;
-
-function SetFileSecurity(lpFileName: LPCTSTR; SecurityInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR): BOOL;
-begin
-  GetProcedureAddress(Pointer(@_SetFileSecurity), advapi32, 'SetFileSecurity' + AWSuffix);
-  Result := _SetFileSecurity(lpFileName, SecurityInformation, pSecurityDescriptor);
-end;
-
-type
-  TGetFileSecurityA = function (lpFileName: LPCSTR; RequestedInformation: SECURITY_INFORMATION;
-    pSecurityDescriptor: PSECURITY_DESCRIPTOR; nLength: DWORD;
-    var lpnLengthNeeded: DWORD): BOOL; stdcall;
-
-var
-  _GetFileSecurityA: TGetFileSecurityA = nil;
-
-function GetFileSecurityA(lpFileName: LPCSTR; RequestedInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR; nLength: DWORD;
-  var lpnLengthNeeded: DWORD): BOOL;
-begin
-  GetProcedureAddress(Pointer(@_GetFileSecurityA), advapi32, 'GetFileSecurityA');
-  Result := _GetFileSecurityA(lpFileName, RequestedInformation, pSecurityDescriptor, nLength, lpnLengthNeeded);
-end;
-
-type
-  TGetFileSecurityW = function (lpFileName: LPCWSTR; RequestedInformation: SECURITY_INFORMATION;
-    pSecurityDescriptor: PSECURITY_DESCRIPTOR; nLength: DWORD;
-    var lpnLengthNeeded: DWORD): BOOL; stdcall;
-
-var
-  _GetFileSecurityW: TGetFileSecurityW = nil;
-
-function GetFileSecurityW(lpFileName: LPCWSTR; RequestedInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR; nLength: DWORD;
-  var lpnLengthNeeded: DWORD): BOOL;
-begin
-  GetProcedureAddress(Pointer(@_GetFileSecurityW), advapi32, 'GetFileSecurityW');
-  Result := _GetFileSecurityW(lpFileName, RequestedInformation, pSecurityDescriptor, nLength, lpnLengthNeeded);
-end;
-
-type
-  TGetFileSecurity = function (lpFileName: LPCTSTR; RequestedInformation: SECURITY_INFORMATION;
-    pSecurityDescriptor: PSECURITY_DESCRIPTOR; nLength: DWORD;
-    var lpnLengthNeeded: DWORD): BOOL; stdcall;
-
-var
-  _GetFileSecurity: TGetFileSecurity = nil;
-
-function GetFileSecurity(lpFileName: LPCTSTR; RequestedInformation: SECURITY_INFORMATION;
-  pSecurityDescriptor: PSECURITY_DESCRIPTOR; nLength: DWORD;
-  var lpnLengthNeeded: DWORD): BOOL;
-begin
-  GetProcedureAddress(Pointer(@_GetFileSecurity), advapi32, 'GetFileSecurity' + AWSuffix);
-  Result := _GetFileSecurity(lpFileName, RequestedInformation, pSecurityDescriptor, nLength, lpnLengthNeeded);
 end;
 
 type
