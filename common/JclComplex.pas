@@ -13,7 +13,7 @@
 { The Original Code is JclComplex.pas.                                                             }
 {                                                                                                  }
 { The Initial Developer of the Original Code is Alexei Koudinov. Portions created by               }
-{ Alexei Koudinov are Copyright (C) of Alexei Koudinov. All Rights Reserved.                       }                         
+{ Alexei Koudinov are Copyright (C) of Alexei Koudinov. All Rights Reserved.                       }
 {                                                                                                  }
 { Contributor(s):                                                                                  }
 {   Marcel van Brakel                                                                              }
@@ -21,7 +21,7 @@
 {   Robert Marquardt (marquardt)                                                                   }
 {   Robert Rossmair (rrossmair)                                                                    }
 {   Matthias Thoma  (mthoma)                                                                       }
-{   Petr Vones (pvones)                                                                            }        
+{   Petr Vones (pvones)                                                                            }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
@@ -42,9 +42,6 @@ unit JclComplex;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   System.SysUtils,
   {$ELSE ~HAS_UNITSCOPE}
@@ -246,17 +243,6 @@ const
   MaxTerm: Byte = 35;
   EpsilonSqr: Float = 1E-20;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -1572,13 +1558,5 @@ begin
     Result := Result + N * TwoPi;
   end;
 end;
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

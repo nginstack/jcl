@@ -50,9 +50,6 @@ unit JclCompression;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
@@ -1035,7 +1032,7 @@ type
     function ItemAccess: TJclStreamAccess; override;
 
     destructor Destroy; override;
-    
+
     function AddDirectory(const PackedName: WideString;
       const DirName: string = ''; RecurseIntoDir: Boolean = False;
       AddFilesInDir: Boolean = False): Integer; overload; virtual;
@@ -2275,17 +2272,6 @@ function Create7zFile(const SourceFile, DestinationFile: TFileName; VolumeSize: 
 
 {$ENDIF MSWINDOWS}
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -3913,7 +3899,7 @@ end;
 destructor TJclCompressionItem.Destroy;
 begin
   ReleaseStream;
-  
+
   inherited Destroy;
 end;
 
@@ -4531,7 +4517,7 @@ begin
   RegisterFormat(TJclUEFIsDecompressArchive);
   RegisterFormat(TJclSquashFSDecompressArchive);
   RegisterFormat(TJclCramFSDecompressArchive);
-  RegisterFormat(TJclExtDecompressArchive); 
+  RegisterFormat(TJclExtDecompressArchive);
   RegisterFormat(TJclVMDKDecompressArchive);
   RegisterFormat(TJclVDIDecompressArchive);
   RegisterFormat(TJclQcowDecompressArchive);
@@ -4705,7 +4691,7 @@ begin
   end
   else
     Result := nil;
-  
+
   // load archive to test signature
   ArchiveStream := TFileStream.Create(AFileName, fmOpenRead and fmShareDenyNone);
   try
@@ -4831,7 +4817,7 @@ begin
   begin
     Result := False;
     Break;
-  end;    
+  end;
 end;}
 
 procedure TJclCompressionArchiveFormats.UnregisterFormat(AClass: TJclCompressionArchiveClass);
@@ -9094,7 +9080,7 @@ begin
       for Index := 0 to FVolumes.Count - 1 do
       begin
         Volume := TJclCompressionVolume(FVolumes.Items[Index]);
-        Assert(Volume.OwnsTmpStream); 
+        Assert(Volume.OwnsTmpStream);
         FreeAndNil(Volume.FTmpStream);
         FileDelete(Volume.TmpFileName);
         Volume.FTmpFileName := '';
@@ -9143,10 +9129,10 @@ var
 begin
   CheckNotDecompressing;
   CheckNotCompressing;
-  
+
   FDestinationDir := ADestinationDir;
   FAutoCreateSubDir := AAutoCreateSubDir;
-  
+
   if FDestinationDir <> '' then
     FDestinationDir := PathAddSeparator(FDestinationDir);
 
@@ -10051,16 +10037,7 @@ end;
 
 {$ENDIF MSWINDOWS}
 
-initialization
-  {$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-  {$ENDIF UNITVERSIONING}
-
 finalization
-  {$IFDEF UNITVERSIONING}
-  UnregisterUnitVersion(HInstance);
-  {$ENDIF UNITVERSIONING}
-
   FreeAndNil(GlobalStreamFormats);
   FreeAndNil(GlobalArchiveFormats);
 

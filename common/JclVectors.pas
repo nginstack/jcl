@@ -45,9 +45,6 @@ unit JclVectors;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   System.Classes,
   {$ELSE ~HAS_UNITSCOPE}
@@ -85,12 +82,12 @@ type
     function CollectionEquals(const ACollection: IJclIntfCollection): Boolean;
     function Contains(const AInterface: IInterface): Boolean;
     function ContainsAll(const ACollection: IJclIntfCollection): Boolean;
-    function Extract(const AInterface: IInterface): Boolean; 
+    function Extract(const AInterface: IInterface): Boolean;
     function ExtractAll(const ACollection: IJclIntfCollection): Boolean;
     function First: IJclIntfIterator;
     function IsEmpty: Boolean;
     function Last: IJclIntfIterator;
-    function Remove(const AInterface: IInterface): Boolean; 
+    function Remove(const AInterface: IInterface): Boolean;
     function RemoveAll(const ACollection: IJclIntfCollection): Boolean;
     function RetainAll(const ACollection: IJclIntfCollection): Boolean;
     function Size: Integer;
@@ -441,12 +438,12 @@ type
     function CollectionEquals(const ACollection: IJclSingleCollection): Boolean;
     function Contains(const AValue: Single): Boolean;
     function ContainsAll(const ACollection: IJclSingleCollection): Boolean;
-    function Extract(const AValue: Single): Boolean; 
+    function Extract(const AValue: Single): Boolean;
     function ExtractAll(const ACollection: IJclSingleCollection): Boolean;
     function First: IJclSingleIterator;
     function IsEmpty: Boolean;
     function Last: IJclSingleIterator;
-    function Remove(const AValue: Single): Boolean; 
+    function Remove(const AValue: Single): Boolean;
     function RemoveAll(const ACollection: IJclSingleCollection): Boolean;
     function RetainAll(const ACollection: IJclSingleCollection): Boolean;
     function Size: Integer;
@@ -524,12 +521,12 @@ type
     function CollectionEquals(const ACollection: IJclDoubleCollection): Boolean;
     function Contains(const AValue: Double): Boolean;
     function ContainsAll(const ACollection: IJclDoubleCollection): Boolean;
-    function Extract(const AValue: Double): Boolean; 
+    function Extract(const AValue: Double): Boolean;
     function ExtractAll(const ACollection: IJclDoubleCollection): Boolean;
     function First: IJclDoubleIterator;
     function IsEmpty: Boolean;
     function Last: IJclDoubleIterator;
-    function Remove(const AValue: Double): Boolean; 
+    function Remove(const AValue: Double): Boolean;
     function RemoveAll(const ACollection: IJclDoubleCollection): Boolean;
     function RetainAll(const ACollection: IJclDoubleCollection): Boolean;
     function Size: Integer;
@@ -607,12 +604,12 @@ type
     function CollectionEquals(const ACollection: IJclExtendedCollection): Boolean;
     function Contains(const AValue: Extended): Boolean;
     function ContainsAll(const ACollection: IJclExtendedCollection): Boolean;
-    function Extract(const AValue: Extended): Boolean; 
+    function Extract(const AValue: Extended): Boolean;
     function ExtractAll(const ACollection: IJclExtendedCollection): Boolean;
     function First: IJclExtendedIterator;
     function IsEmpty: Boolean;
     function Last: IJclExtendedIterator;
-    function Remove(const AValue: Extended): Boolean; 
+    function Remove(const AValue: Extended): Boolean;
     function RemoveAll(const ACollection: IJclExtendedCollection): Boolean;
     function RetainAll(const ACollection: IJclExtendedCollection): Boolean;
     function Size: Integer;
@@ -710,12 +707,12 @@ type
     function CollectionEquals(const ACollection: IJclIntegerCollection): Boolean;
     function Contains(AValue: Integer): Boolean;
     function ContainsAll(const ACollection: IJclIntegerCollection): Boolean;
-    function Extract(AValue: Integer): Boolean; 
+    function Extract(AValue: Integer): Boolean;
     function ExtractAll(const ACollection: IJclIntegerCollection): Boolean;
     function First: IJclIntegerIterator;
     function IsEmpty: Boolean;
     function Last: IJclIntegerIterator;
-    function Remove(AValue: Integer): Boolean; 
+    function Remove(AValue: Integer): Boolean;
     function RemoveAll(const ACollection: IJclIntegerCollection): Boolean;
     function RetainAll(const ACollection: IJclIntegerCollection): Boolean;
     function Size: Integer;
@@ -793,12 +790,12 @@ type
     function CollectionEquals(const ACollection: IJclCardinalCollection): Boolean;
     function Contains(AValue: Cardinal): Boolean;
     function ContainsAll(const ACollection: IJclCardinalCollection): Boolean;
-    function Extract(AValue: Cardinal): Boolean; 
+    function Extract(AValue: Cardinal): Boolean;
     function ExtractAll(const ACollection: IJclCardinalCollection): Boolean;
     function First: IJclCardinalIterator;
     function IsEmpty: Boolean;
     function Last: IJclCardinalIterator;
-    function Remove(AValue: Cardinal): Boolean; 
+    function Remove(AValue: Cardinal): Boolean;
     function RemoveAll(const ACollection: IJclCardinalCollection): Boolean;
     function RetainAll(const ACollection: IJclCardinalCollection): Boolean;
     function Size: Integer;
@@ -876,12 +873,12 @@ type
     function CollectionEquals(const ACollection: IJclInt64Collection): Boolean;
     function Contains(const AValue: Int64): Boolean;
     function ContainsAll(const ACollection: IJclInt64Collection): Boolean;
-    function Extract(const AValue: Int64): Boolean; 
+    function Extract(const AValue: Int64): Boolean;
     function ExtractAll(const ACollection: IJclInt64Collection): Boolean;
     function First: IJclInt64Iterator;
     function IsEmpty: Boolean;
     function Last: IJclInt64Iterator;
-    function Remove(const AValue: Int64): Boolean; 
+    function Remove(const AValue: Int64): Boolean;
     function RemoveAll(const ACollection: IJclInt64Collection): Boolean;
     function RetainAll(const ACollection: IJclInt64Collection): Boolean;
     function Size: Integer;
@@ -959,12 +956,12 @@ type
     function CollectionEquals(const ACollection: IJclPtrCollection): Boolean;
     function Contains(APtr: Pointer): Boolean;
     function ContainsAll(const ACollection: IJclPtrCollection): Boolean;
-    function Extract(APtr: Pointer): Boolean; 
+    function Extract(APtr: Pointer): Boolean;
     function ExtractAll(const ACollection: IJclPtrCollection): Boolean;
     function First: IJclPtrIterator;
     function IsEmpty: Boolean;
     function Last: IJclPtrIterator;
-    function Remove(APtr: Pointer): Boolean; 
+    function Remove(APtr: Pointer): Boolean;
     function RemoveAll(const ACollection: IJclPtrCollection): Boolean;
     function RetainAll(const ACollection: IJclPtrCollection): Boolean;
     function Size: Integer;
@@ -1042,12 +1039,12 @@ type
     function CollectionEquals(const ACollection: IJclCollection): Boolean;
     function Contains(AObject: TObject): Boolean;
     function ContainsAll(const ACollection: IJclCollection): Boolean;
-    function Extract(AObject: TObject): Boolean; 
+    function Extract(AObject: TObject): Boolean;
     function ExtractAll(const ACollection: IJclCollection): Boolean;
     function First: IJclIterator;
     function IsEmpty: Boolean;
     function Last: IJclIterator;
-    function Remove(AObject: TObject): Boolean; 
+    function Remove(AObject: TObject): Boolean;
     function RemoveAll(const ACollection: IJclCollection): Boolean;
     function RetainAll(const ACollection: IJclCollection): Boolean;
     function Size: Integer;
@@ -1134,12 +1131,12 @@ type
     function CollectionEquals(const ACollection: IJclCollection<T>): Boolean;
     function Contains(const AItem: T): Boolean;
     function ContainsAll(const ACollection: IJclCollection<T>): Boolean;
-    function Extract(const AItem: T): Boolean; 
+    function Extract(const AItem: T): Boolean;
     function ExtractAll(const ACollection: IJclCollection<T>): Boolean;
     function First: IJclIterator<T>;
     function IsEmpty: Boolean;
     function Last: IJclIterator<T>;
-    function Remove(const AItem: T): Boolean; 
+    function Remove(const AItem: T): Boolean;
     function RemoveAll(const ACollection: IJclCollection<T>): Boolean;
     function RetainAll(const ACollection: IJclCollection<T>): Boolean;
     function Size: Integer;
@@ -1244,17 +1241,6 @@ type
 {$ENDIF WIN64}
 {$ENDIF BCB}
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -11766,7 +11752,7 @@ begin
       // independent
       for I := 0 to Count - 1 do
         List[FromIndex + I] := Default(T);
-  end; 
+  end;
 end;
 
 //=== { TJclVectorIterator<T> } ===========================================================
@@ -11989,14 +11975,6 @@ end;
 
 //DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.
 

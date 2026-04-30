@@ -47,9 +47,6 @@ unit JclPeImage;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   Winapi.Windows, System.Classes, System.SysUtils, System.TypInfo, System.Contnrs,
   {$ELSE ~HAS_UNITSCOPE}
@@ -1085,18 +1082,6 @@ function PeIsNameMangled(const Name: string): TJclPeUmResult;
 
 function UndecorateSymbolName(const DecoratedName: string; out UnMangled: string; Flags: DWORD): Boolean;
 function PeUnmangleName(const Name: string; out Unmangled: string): TJclPeUmResult;
-
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\windows';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -6983,13 +6968,5 @@ begin
   if Result = umNotMangled then
     Unmangled := Name;
 end;
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

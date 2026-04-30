@@ -37,9 +37,6 @@ unit JclCharsets;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   JclBase;
 
 type
@@ -467,17 +464,6 @@ function CodePageFromCharsetName(const CharsetName: string): Word;
 function CharsetInfoFromCharsetName(const CharsetName: string): TJclCharsetInfo;
 function CharsetNameFromCodePage(CodePage: Word): string;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -559,14 +545,6 @@ begin
   end;
   raise EJclCharsetError.CreateRes(@RsENoCharset);
 end;
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.
 

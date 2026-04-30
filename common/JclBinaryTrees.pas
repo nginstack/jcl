@@ -42,9 +42,6 @@ unit JclBinaryTrees;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   System.Classes,
   {$ELSE ~HAS_UNITSCOPE}
@@ -1939,17 +1936,6 @@ type
 {$ENDIF WIN64}
 {$ENDIF BCB}
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -21374,14 +21360,6 @@ end;
 
 //DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.
 

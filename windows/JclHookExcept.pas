@@ -40,9 +40,6 @@ interface
 {$I windowsonly.inc}
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   Winapi.Windows, System.SysUtils, System.Classes;
   {$ELSE ~HAS_UNITSCOPE}
@@ -93,18 +90,6 @@ function JclHookedExceptModulesList(out ModulesList: TJclModuleArray): Boolean;
 
 // Hooking routines location info helper
 function JclBelongsHookedCode(Address: Pointer): Boolean;
-
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\windows';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 

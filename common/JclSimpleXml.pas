@@ -42,9 +42,6 @@ interface
 {$I jcl.inc}
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF HAS_UNIT_RTLCONSTS}
   System.RTLConsts,
@@ -657,18 +654,6 @@ function XMLDecode(const S: string): string;
 function EntityEncode(const S: string): string;
 // Decodes XML entities (@apos;, &quot;, &lt;, &gt; and &amp;) into special characters (', ", <, > and &)
 function EntityDecode(const S: string): string;
-
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-  );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -2652,7 +2637,7 @@ begin
         if M = I then
           M := J
         else if M = J then
-          M := I;        
+          M := I;
         Inc(I);
         Dec(J);
       end
@@ -4432,15 +4417,7 @@ begin
   FElems.Add(Result);
 end;
 
-initialization
-  {$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-  {$ENDIF UNITVERSIONING}
-
 finalization
   FreeAndNil(GlobalXMLVariant);
-  {$IFDEF UNITVERSIONING}
-  UnregisterUnitVersion(HInstance);
-  {$ENDIF UNITVERSIONING}
 
 end.

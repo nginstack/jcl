@@ -41,9 +41,6 @@ interface
 {$I jcl.inc}
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   System.Classes,
   {$ELSE ~HAS_UNITSCOPE}
@@ -2837,17 +2834,6 @@ type
 {$ENDIF WIN64}
 {$ENDIF BCB}
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -31412,7 +31398,7 @@ begin
       // independent
       for I := 0 to Count - 1 do
         List[FromIndex + I] := Default(TSortedEntry);
-  end; 
+  end;
 end;
 
 procedure TJclSortedMap<TKey,TValue>.PutAll(const AMap: IJclMap<TKey,TValue>);
@@ -31808,13 +31794,5 @@ end;
 
 //DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

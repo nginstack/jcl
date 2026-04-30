@@ -60,9 +60,6 @@ unit JclWin32;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   Winapi.Windows, System.SysUtils,
   {$IFNDEF FPC}
@@ -7900,16 +7897,6 @@ const
   RtdlNetBios: function(P: PNCB): UCHAR stdcall = NetBios;
 
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\windows'
-    );
-{$ENDIF UNITVERSIONING}
-
 implementation
 
 uses
@@ -9204,14 +9191,6 @@ begin
 end;
 
 
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.
 

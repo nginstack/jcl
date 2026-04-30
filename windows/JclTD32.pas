@@ -42,9 +42,6 @@ interface
 {$I windowsonly.inc}
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Winapi.Windows,
@@ -842,7 +839,7 @@ type
   end;
 
   {$IFDEF BORLAND}
-  // PE Image with TD32 information and source location support 
+  // PE Image with TD32 information and source location support
   TJclPeBorTD32Image = class(TJclPeBorImage)
   private
     FIsTD32DebugPresent: Boolean;
@@ -861,18 +858,6 @@ type
     property TD32Scanner: TJclTD32InfoScanner read FTD32Scanner;
   end;
   {$ENDIF BORLAND}
-
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\windows';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -1751,12 +1736,4 @@ begin
 end;
 
 {$ENDIF BORLAND}
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
-
 end.

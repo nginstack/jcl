@@ -65,9 +65,6 @@ unit JclFileUtils;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
@@ -230,7 +227,6 @@ function FileDelete(const FileName: string): Boolean;
 function FileExists(const FileName: string): Boolean;
 
 {$IFDEF MSWINDOWS}
-function FileGetOwnerName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
 function FileGetSize(const FileName: string): Int64;
 {$ENDIF MSWINDOWS}
 function FindUnusedFileName(FileName: string; const FileExt: string; NumberPrefix: string = ''): string;
@@ -274,16 +270,12 @@ function GetModulePath(const Module: HMODULE): string;
 function GetSizeOfFile(const FileName: string): Int64; overload;
 function GetSizeOfFile(const FileInfo: TSearchRec): Int64; overload;
 function GetSizeOfFile(Handle: THandle): Int64; overload;
-function GetStandardFileInfo(const FileName: string): TWin32FileAttributeData;
 function IsDirectory(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): Boolean;
 {$ENDIF MSWINDOWS}
 function IsRootDirectory(const CanonicFileName: string): Boolean;
 {$IFDEF MSWINDOWS}
 function LockVolume(const Volume: string; var Handle: THandle): Boolean;
 function OpenVolume(const Drive: Char): THandle;
-function SetDirLastWrite(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
-function SetDirLastAccess(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
-function SetDirCreation(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
 function SetFileLastWrite(const FileName: string; const DateTime: TDateTime): Boolean;
 function SetFileLastAccess(const FileName: string; const DateTime: TDateTime): Boolean;
 function SetFileCreation(const FileName: string; const DateTime: TDateTime): Boolean;
@@ -655,11 +647,6 @@ type
     constructor Attach(VersionInfoData: Pointer; Size: Integer);
     constructor Create(const FileName: string); overload;
     {$IFDEF MSWINDOWS}
-    {$IFDEF FPC}
-    constructor Create(const Window: HWND; Dummy: Pointer = nil); overload;
-    {$ELSE}
-    constructor Create(const Window: HWND); overload;
-    {$ENDIF}
     constructor Create(const Module: HMODULE); overload;
     {$ENDIF MSWINDOWS}
     destructor Destroy; override;
@@ -696,8 +683,6 @@ type
 
 function OSIdentToString(const OSIdent: DWORD): string;
 function OSFileTypeToString(const OSFileType: DWORD; const OSFileSubType: DWORD = 0): string;
-
-function WindowToModuleFileName(const Window: HWND): string;
 {$ENDIF MSWINDOWS}
 
 // Version Info formatting
@@ -986,17 +971,6 @@ function ParamPos (const SearchName: string; const Separator: string = '=';
              const AllowedPrefixCharacters: string = '-/'): Integer;
 
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -1009,7 +983,7 @@ uses
   System.Math,
   {$IFDEF MSWINDOWS}
   Winapi.ShellApi, Winapi.ActiveX, System.Win.ComObj, Winapi.ShlObj,
-  JclSysInfo, JclSecurity,
+  JclSysInfo,
   {$ENDIF MSWINDOWS}
   {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF HAS_UNIT_CHARACTER}
@@ -1018,7 +992,7 @@ uses
   Math,
   {$IFDEF MSWINDOWS}
   ShellApi, ActiveX, ComObj, ShlObj,
-  JclShell, JclSysInfo, JclSecurity,
+  JclShell, JclSysInfo,
   {$ENDIF MSWINDOWS}
   {$ENDIF ~HAS_UNITSCOPE}
   JclDateTime, JclResources,
@@ -3335,51 +3309,6 @@ end;
 {$ENDIF}
 
 {$IFDEF MSWINDOWS}
-function FileGetOwnerName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
-var
-  DomainName: WideString;
-  TmpResult: WideString;
-  pSD: PSecurityDescriptor;
-  BufSize: DWORD;
-begin
-  if IsWinNT then
-  begin
-    BufSize := 0;
-    GetFileSecurity(PChar(FileName), OWNER_SECURITY_INFORMATION, nil, 0, BufSize);
-    if BufSize > 0 then
-    begin
-      GetMem(pSD, BufSize);
-      try
-        GetFileSecurity(PChar(FileName), OWNER_SECURITY_INFORMATION,
-          pSD, BufSize, BufSize);
-        LookupAccountBySid(Pointer(TJclAddr(pSD) + TJclAddr(pSD^.Owner)), TmpResult, DomainName, True);
-      finally
-        FreeMem(pSD);
-      end;
-      Result := Trim(TmpResult);
-    end;
-  end;
-end;
-{$ENDIF ~MSWINDOWS}
-{$IFDEF HAS_UNIT_LIBC}
-function FileGetOwnerName(const FileName: string {$IFDEF UNIX}; ResolveSymLinks: Boolean = True {$ENDIF}): string;
-var
-  Buf: TStatBuf64;
-  ResultBuf: TPasswordRecord;
-  ResultBufPtr: PPasswordRecord;
-  Buffer: array of Char;
-begin
-  if GetFileStatus(FileName, Buf, ResolveSymLinks) = 0 then
-  begin
-    SetLength(Buffer, 128);
-    while getpwuid_r(Buf.st_uid, ResultBuf, @Buffer[0], Length(Buffer), ResultBufPtr) = ERANGE do
-      SetLength(Buffer, Length(Buffer) * 2);
-    Result := ResultBuf.pw_name;
-  end;
-end;
-{$ENDIF HAS_UNIT_LIBC}
-
-{$IFDEF MSWINDOWS}
 function FileGetSize(const FileName: string): Int64;
 var
   FileAttributesEx: WIN32_FILE_ATTRIBUTE_DATA;
@@ -3410,15 +3339,6 @@ begin
     Result := Buf.st_size;
 end;
 {$ENDIF HAS_UNIT_LIBC}
-
-{$IFDEF MSWINDOWS}
-{$IFDEF FPC}
-{ TODO : Move this over to JclWin32 when JclWin32 gets overhauled. }
-function GetTempFileName(lpPathName, lpPrefixString: PChar;
-  uUnique: UINT; lpTempFileName: PChar): UINT; stdcall;
-external kernel32 name 'GetTempFileNameA';
-{$ENDIF FPC}
-{$ENDIF MSWINDOWS}
 
 function FindUnusedFileName(FileName: string; const FileExt: string; NumberPrefix: string = ''): string;
 var
@@ -3896,51 +3816,6 @@ end;
 {$ENDIF HAS_UNIT_LIBC}
 
 {$IFDEF MSWINDOWS}
-
-{$IFDEF FPC}
-{ TODO : Move this over to JclWin32 when JclWin32 gets overhauled. }
-function GetFileAttributesEx(lpFileName: PChar;
-  fInfoLevelId: TGetFileExInfoLevels; lpFileInformation: Pointer): BOOL; stdcall;
-external kernel32 name 'GetFileAttributesExA';
-{$ENDIF FPC}
-
-function GetStandardFileInfo(const FileName: string): TWin32FileAttributeData;
-var
-  Handle: THandle;
-  FileInfo: TByHandleFileInformation;
-begin
-  Assert(FileName <> '');
-  { TODO : Use RTDL-Version of GetFileAttributesEx }
-  if IsWin95 or IsWin95OSR2 or IsWinNT3 then
-  begin
-    Handle := CreateFile(PChar(FileName), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, 0, 0);
-    if Handle <> INVALID_HANDLE_VALUE then
-    try
-      FileInfo.dwFileAttributes := 0;
-      if not GetFileInformationByHandle(Handle, FileInfo) then
-        raise EJclFileUtilsError.CreateResFmt(@RsFileUtilsAttrUnavailable, [FileName]);
-      Result.dwFileAttributes := FileInfo.dwFileAttributes;
-      Result.ftCreationTime := FileInfo.ftCreationTime;
-      Result.ftLastAccessTime := FileInfo.ftLastAccessTime;
-      Result.ftLastWriteTime := FileInfo.ftLastWriteTime;
-      Result.nFileSizeHigh := FileInfo.nFileSizeHigh;
-      Result.nFileSizeLow := FileInfo.nFileSizeLow;
-    finally
-      CloseHandle(Handle);
-    end
-    else
-      raise EJclFileUtilsError.CreateResFmt(@RsFileUtilsAttrUnavailable, [FileName]);
-  end
-  else
-  begin
-    if not GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @Result) then
-      raise EJclFileUtilsError.CreateResFmt(@RsFileUtilsAttrUnavailable, [FileName]);
-  end;
-end;
-
-{$ENDIF MSWINDOWS}
-
-{$IFDEF MSWINDOWS}
 function IsDirectory(const FileName: string): Boolean;
 var
   R: DWORD;
@@ -4086,60 +3961,6 @@ end;
 function SetFileCreation(const FileName: string; const DateTime: TDateTime): Boolean;
 begin
   Result := SetFileTimesHelper(FileName, DateTime, ftCreation);
-end;
-
-// utility function for SetDirTimesHelper
-
-function BackupPrivilegesEnabled: Boolean;
-begin
-  Result := IsPrivilegeEnabled(SE_BACKUP_NAME) and IsPrivilegeEnabled(SE_RESTORE_NAME);
-end;
-
-function SetDirTimesHelper(const DirName: string; const DateTime: TDateTime;
-  Times: TFileTimes; RequireBackupRestorePrivileges: Boolean): Boolean;
-var
-  Handle: THandle;
-  FileTime: TFileTime;
-  SystemTime: TSystemTime;
-begin
-  Result := False;
-  if IsDirectory(DirName) and (not RequireBackupRestorePrivileges or BackupPrivilegesEnabled) then
-  begin
-    Handle := CreateFile(PChar(DirName), GENERIC_WRITE, FILE_SHARE_READ, nil,
-      OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
-    if Handle <> INVALID_HANDLE_VALUE then
-    try
-      {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.DateTimeToSystemTime(DateTime, SystemTime);
-      FileTime.dwLowDateTime := 0;
-      FileTime.dwHighDateTime := 0;
-      {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.SystemTimeToFileTime(SystemTime, FileTime);
-      case Times of
-        ftLastAccess:
-          Result := SetFileTime(Handle, nil, @FileTime, nil);
-        ftLastWrite:
-          Result := SetFileTime(Handle, nil, nil, @FileTime);
-        ftCreation:
-          Result := SetFileTime(Handle, @FileTime, nil, nil);
-      end;
-    finally
-      CloseHandle(Handle);
-    end;
-  end;
-end;
-
-function SetDirLastWrite(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
-begin
-  Result := SetDirTimesHelper(DirName, DateTime, ftLastWrite, RequireBackupRestorePrivileges);
-end;
-
-function SetDirLastAccess(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
-begin
-  Result := SetDirTimesHelper(DirName, DateTime, ftLastAccess, RequireBackupRestorePrivileges);
-end;
-
-function SetDirCreation(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
-begin
-  Result := SetDirTimesHelper(DirName, DateTime, ftCreation, RequireBackupRestorePrivileges);
 end;
 
 procedure FillByteArray(var Bytes: array of Byte; Count: Cardinal; B: Byte);
@@ -4365,102 +4186,6 @@ begin
   Result := TrimLeft(Result);
 end;
 
-function WindowToModuleFileName(const Window: HWND): string;
-type
-  {$IFDEF SUPPORTS_UNICODE}
-  TGetModuleFileNameEx = function(hProcess: THandle; hModule: HMODULE; FileName: PWideChar; nSize: DWORD): DWORD; stdcall;
-  TQueryFullProcessImageName = function(HProcess: THandle; dwFlags: DWORD; lpExeName: PWideChar; lpdwSize: PDWORD): BOOL; stdcall;
-  {$ELSE ~SUPPORTS_UNICODE}
-  TGetModuleFileNameEx = function(hProcess: THandle; hModule: HMODULE; FileName: PAnsiChar; nSize: DWORD): DWORD; stdcall;
-  TQueryFullProcessImageName = function(HProcess: THandle; dwFlags: DWORD; lpExeName: PAnsiChar; lpdwSize: PDWORD): BOOL; stdcall;
-  {$ENDIF ~SUPPORTS_UNICODE}
-var
-  FileName: array[0..300] of Char;
-  DllHinst: HMODULE;
-  ProcessID: DWORD;
-  HProcess: THandle;
-  GetModuleFileNameExAddress: TGetModuleFileNameEx;
-  QueryFullProcessImageNameAddress: TQueryFullProcessImageName;
-  Len: DWORD;
-begin
-  Result := '';
-  if Window <> 0 then
-  begin
-    if not JclCheckWinVersion(5, 0) then // Win2k or newer required
-      raise EJclWin32Error.CreateRes(@RsEWindowsVersionNotSupported);
-
-    {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetWindowThreadProcessId(Window, @ProcessID);
-    hProcess := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, false, ProcessID);
-    if hProcess <> 0 then
-    begin
-      try
-        if JclCheckWinVersion(6, 0) then // WinVista or newer
-        begin
-          DllHinst := LoadLibrary('Kernel32.dll');
-          if DllHinst <> 0 then
-          begin
-            try
-              {$IFDEF SUPPORTS_UNICODE}
-              QueryFullProcessImageNameAddress := GetProcAddress(DllHinst, 'QueryFullProcessImageNameW');
-              {$ELSE ~SUPPORTS_UNICODE}
-              QueryFullProcessImageNameAddress := GetProcAddress(DllHinst, 'QueryFullProcessImageNameA');
-              {$ENDIF ~SUPPORTS_UNICODE}
-              if Assigned(QueryFullProcessImageNameAddress) then
-              begin
-                Len := Length(FileName);
-                if QueryFullProcessImageNameAddress(hProcess, 0, FileName, PDWORD(@Len)) then
-                  Result := FileName;
-                //else
-                //  RaiseLastOSError   would be nice, but it didn't raise an exception before the return value was checked
-              end
-              else
-                raise EJclError.CreateResFmt(@RsEFunctionNotFound, ['Kernel32.dll', 'QueryFullProcessImageName']);
-            finally
-              FreeLibrary(DllHinst);
-            end;
-          end
-          else
-            raise EJclError.CreateResFmt(@RsELibraryNotFound, ['Kernel32.dll']);
-        end
-        else
-        begin
-          DllHinst := LoadLibrary('Psapi.dll');
-          if DllHinst <> 0 then
-          begin
-            try
-              {$IFDEF SUPPORTS_UNICODE}
-              GetModuleFileNameExAddress := GetProcAddress(DllHinst, 'GetModuleFileNameExW');
-              {$ELSE ~SUPPORTS_UNICODE}
-              GetModuleFileNameExAddress := GetProcAddress(DllHinst, 'GetModuleFileNameExA');
-              {$ENDIF ~SUPPORTS_UNICODE}
-              if Assigned(GetModuleFileNameExAddress) then
-              begin
-                Len := GetModuleFileNameExAddress(hProcess, 0, FileName, Length(FileName));
-                if Len > 0 then
-                  Result := FileName;
-                //else
-                //  RaiseLastOSError;   would be nice, but it didn't raise an exception before the return value was checked
-              end
-              else
-                raise EJclError.CreateResFmt(@RsEFunctionNotFound, ['Psapi.dll', 'GetModuleFileNameEx']);
-            finally
-              FreeLibrary(DllHinst);
-            end;
-          end
-          else
-            raise EJclError.CreateResFmt(@RsELibraryNotFound, ['Psapi.dll']);
-        end;
-      finally
-        CloseHandle(hProcess);
-      end;
-    end
-    else
-      raise EJclError.CreateResFmt(@RsEProcessNotValid, [ProcessID]);
-  end
-  else
-    raise EJclError.CreateResFmt(@RsEWindowNotValid, [Window]);
-end;
-
 {$ENDIF MSWINDOWS}
 
 // Version Info formatting
@@ -4565,15 +4290,6 @@ begin
   SetLength(FBuffer, Size);
   Win32Check(GetFileVersionInfo(PChar(FileName), Handle, Size, PAnsiChar(FBuffer)));
   ExtractData;
-end;
-
-{$IFDEF FPC}
-constructor TJclFileVersionInfo.Create(const Window: HWND; Dummy: Pointer = nil);
-{$ELSE}
-constructor TJclFileVersionInfo.Create(const Window: HWND);
-{$ENDIF}
-begin
-  Create(WindowToModuleFileName(Window));
 end;
 
 constructor TJclFileVersionInfo.Create(const Module: HMODULE);
@@ -6331,13 +6047,5 @@ begin
   end;
 end;
 
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

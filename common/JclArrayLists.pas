@@ -47,9 +47,6 @@ uses
   {$ELSE ~HAS_UNITSCOPE}
   Classes,
   {$ENDIF ~HAS_UNITSCOPE}
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   JclAlgorithms,
   JclBase, JclAbstractContainers, JclContainerIntf, JclSynch;
 
@@ -1219,18 +1216,6 @@ type
   {$HPPEMIT END '#endif'}
 {$ENDIF WIN64}
 {$ENDIF BCB}
-
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -11807,7 +11792,7 @@ begin
       // independent
       for I := 0 to Count - 1 do
         List[FromIndex + I] := Default(T);
-  end; 
+  end;
 end;
 
 //=== { TJclArrayIterator<T> } ===============================================================
@@ -12044,14 +12029,6 @@ end;
 
 //DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.
 

@@ -48,9 +48,6 @@ unit JclConsole;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   Winapi.Windows, System.Classes, System.SysUtils, System.Contnrs,
   {$ELSE ~HAS_UNITSCOPE}
@@ -391,18 +388,6 @@ type
     property EventCount: DWORD read GetEventCount;
   end;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\windows';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
-
 implementation
 
 uses
@@ -420,7 +405,7 @@ uses
 {$EXTERNALSYM CreateConsoleScreenBuffer}
 const
   kernel32 = 'kernel32.dll';
-  
+
 function CreateConsoleScreenBuffer(dwDesiredAccess, dwShareMode: DWORD;
   lpSecurityAttributes: PSecurityAttributes; dwFlags: DWORD; lpScreenBufferData: Pointer): THandle; stdcall;
   external kernel32 name 'CreateConsoleScreenBuffer';
@@ -1544,13 +1529,5 @@ begin
   Evts[0] := Event;
   Result := PutEvents(Evts) = 1;
 end;
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.
