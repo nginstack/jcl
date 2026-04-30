@@ -61,11 +61,6 @@
 // To exclude obsolete code from compilation, remove the point from the line below
 {$DEFINE DROP_OBSOLETE_CODE}
 
-
-//Support for JclUnitVersioning.pas, not supported by Delphi 2005 (automatically disabled afterward)
-{.$DEFINE UNITVERSIONING}
-
-
 // debug sources
 // defining these symbols will the debug source to be automatically registered
 {.$DEFINE DEBUG_NO_BINARY}

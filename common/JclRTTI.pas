@@ -44,9 +44,6 @@ unit JclRTTI;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   System.Types,
   {$IFDEF MSWINDOWS}
@@ -214,7 +211,7 @@ type
     property UnitName: string read GetUnitName;
   end;
 
-  TJclEnumerationTypeInfo = class(TJclOrdinalRangeTypeInfo, IJclBaseInfo, IJclTypeInfo, 
+  TJclEnumerationTypeInfo = class(TJclOrdinalRangeTypeInfo, IJclBaseInfo, IJclTypeInfo,
     IJclValueTypeInfo, IJclOrdinalTypeInfo, IJclOrdinalRangeTypeInfo, IJclEnumerationTypeInfo)
   public
     { IJclBaseInfo }
@@ -706,17 +703,6 @@ function GetStringPropList(TypeInfo: PTypeInfo; out PropList: PPropList): Intege
 // returns all object properties
 function GetObjectProperties(AnObj: TObject; Recurse: Boolean = False): IJclObjPropInfoArray;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -2969,14 +2955,8 @@ end;
 
 initialization
   TypeList := TThreadList.Create;
-  {$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-  {$ENDIF UNITVERSIONING}
 
 finalization
-  {$IFDEF UNITVERSIONING}
-  UnregisterUnitVersion(HInstance);
-  {$ENDIF UNITVERSIONING}
   ClearInfoList;
   FreeAndNil(TypeList);
 

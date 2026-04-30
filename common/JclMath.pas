@@ -53,9 +53,6 @@ interface
 {$ENDIF CPU64}
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   System.SysUtils, System.Classes,
   {$ELSE ~HAS_UNITSCOPE}
@@ -759,17 +756,6 @@ function CheckCrc32_A(const Crc32Table: TCrc32Table; var X: array of Byte; Crc: 
 // initialize a table
 procedure InitCrc32(Polynom, Start: Cardinal; out Crc32Table: TCrc32Table); overload;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -4076,13 +4062,5 @@ begin
   InitCrc32(Polynom, Start, Crc32DefaultTable);
 end;
 
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

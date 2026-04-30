@@ -39,9 +39,6 @@ unit JclSchedule;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   System.SysUtils,
   {$ELSE ~HAS_UNITSCOPE}
@@ -182,17 +179,6 @@ type
 
 function CreateSchedule: IJclSchedule;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -567,7 +553,7 @@ type
     function GetInterval: Cardinal;
     procedure SetIndexKind(Value: TScheduleIndexKind);
     procedure SetIndexValue(Value: Integer);
-    procedure SetDay(Value: Cardinal); 
+    procedure SetDay(Value: Cardinal);
     procedure SetInterval(Value: Cardinal);
 
     property IndexKind: TScheduleIndexKind read GetIndexKind write SetIndexKind;
@@ -906,7 +892,7 @@ type
     { IJclYearlySchedule }
     function GetMonth: Cardinal;
     procedure SetMonth(Value: Cardinal);
-    
+
     property Month: Cardinal read GetMonth write SetMonth;
   end;
 
@@ -1298,13 +1284,5 @@ function CreateSchedule: IJclSchedule;
 begin
   Result := TJclSchedule.Create;
 end;
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

@@ -170,9 +170,6 @@ unit JclUnicode;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Winapi.Windows,
@@ -332,79 +329,6 @@ type
     ccRegionalIndicator
   );
   TCharacterCategories = set of TCharacterCategory;
-
-{$IFDEF HAS_UNIT_CHARACTER}
-type
-  TCharacterUnicodeCategory = ccLetterUppercase..ccSymbolOther;
-
-const
-  CharacterCategoryToUnicodeCategory: array [TCharacterUnicodeCategory] of TUnicodeCategory =
-    ( TUnicodeCategory.ucUppercaseLetter,    // ccLetterUppercase
-      TUnicodeCategory.ucLowercaseLetter,    // ccLetterLowercase
-      TUnicodeCategory.ucTitlecaseLetter,    // ccLetterTitlecase
-      TUnicodeCategory.ucNonSpacingMark,     // ccMarkNonSpacing
-      TUnicodeCategory.ucCombiningMark,      // ccMarkSpacingCombining
-      TUnicodeCategory.ucEnclosingMark,      // ccMarkEnclosing
-      TUnicodeCategory.ucDecimalNumber,      // ccNumberDecimalDigit
-      TUnicodeCategory.ucLetterNumber,       // ccNumberLetter
-      TUnicodeCategory.ucOtherNumber,        // ccNumberOther
-      TUnicodeCategory.ucSpaceSeparator,     // ccSeparatorSpace
-      TUnicodeCategory.ucLineSeparator,      // ccSeparatorLine
-      TUnicodeCategory.ucParagraphSeparator, // ccSeparatorParagraph
-      TUnicodeCategory.ucControl,            // ccOtherControl
-      TUnicodeCategory.ucFormat,             // ccOtherFormat
-      TUnicodeCategory.ucSurrogate,          // ccOtherSurrogate
-      TUnicodeCategory.ucPrivateUse,         // ccOtherPrivate
-      TUnicodeCategory.ucUnassigned,         // ccOtherUnassigned
-      TUnicodeCategory.ucModifierLetter,     // ccLetterModifier
-      TUnicodeCategory.ucOtherLetter,        // ccLetterOther
-      TUnicodeCategory.ucConnectPunctuation, // ccPunctuationConnector
-      TUnicodeCategory.ucDashPunctuation,    // ccPunctuationDash
-      TUnicodeCategory.ucOpenPunctuation,    // ccPunctuationOpen
-      TUnicodeCategory.ucClosePunctuation,   // ccPunctuationClose
-      TUnicodeCategory.ucInitialPunctuation, // ccPunctuationInitialQuote
-      TUnicodeCategory.ucFinalPunctuation,   // ccPunctuationFinalQuote
-      TUnicodeCategory.ucOtherPunctuation,   // ccPunctuationOther
-      TUnicodeCategory.ucMathSymbol,         // ccSymbolMath
-      TUnicodeCategory.ucCurrencySymbol,     // ccSymbolCurrency
-      TUnicodeCategory.ucModifierSymbol,     // ccSymbolModifier
-      TUnicodeCategory.ucOtherSymbol );      // ccSymbolOther
-
-  UnicodeCategoryToCharacterCategory: array [TUnicodeCategory] of TCharacterCategory =
-    ( ccOtherControl,            // ucControl
-      ccOtherFormat,             // ucFormat
-      ccOtherUnassigned,         // ucUnassigned
-      ccOtherPrivate,            // ucPrivateUse
-      ccOtherSurrogate,          // ucSurrogate
-      ccLetterLowercase,         // ucLowercaseLetter
-      ccLetterModifier,          // ucModifierLetter
-      ccLetterOther,             // ucOtherLetter
-      ccLetterTitlecase,         // ucTitlecaseLetter
-      ccLetterUppercase,         // ucUppercaseLetter
-      ccMarkSpacingCombining,    // ucCombiningMark
-      ccMarkEnclosing,           // ucEnclosingMark
-      ccMarkNonSpacing,          // ucNonSpacingMark
-      ccNumberDecimalDigit,      // ucDecimalNumber
-      ccNumberLetter,            // ucLetterNumber
-      ccNumberOther,             // ucOtherNumber
-      ccPunctuationConnector,    // ucConnectPunctuation
-      ccPunctuationDash,         // ucDashPunctuation
-      ccPunctuationClose,        // ucClosePunctuation
-      ccPunctuationFinalQuote,   // ucFinalPunctuation
-      ccPunctuationInitialQuote, // ucInitialPunctuation
-      ccPunctuationOther,        // ucOtherPunctuation
-      ccPunctuationOpen,         // ucOpenPunctuation
-      ccSymbolCurrency,          // ucCurrencySymbol
-      ccSymbolModifier,          // ucModifierSymbol
-      ccSymbolMath,              // ucMathSymbol
-      ccSymbolOther,             // ucOtherSymbol
-      ccSeparatorLine,           // ucLineSeparator
-      ccSeparatorParagraph,      // ucParagraphSeparator
-      ccSeparatorSpace );        // ucSpaceSeparator
-
-function CharacterCategoriesToUnicodeCategory(const Categories: TCharacterCategories): TUnicodeCategory;
-function UnicodeCategoryToCharacterCategories(Category: TUnicodeCategory): TCharacterCategories;
-{$ENDIF HAS_UNIT_CHARACTER}
 
 type
   // four forms of normalization are defined:
@@ -1798,17 +1722,6 @@ function UCS4ArrayEquals(const Left: TUCS4Array; Right: UCS4): Boolean; overload
 function UCS4ArrayEquals(const Left: TUCS4Array; const Right: AnsiString): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function UCS4ArrayEquals(const Left: TUCS4Array; Right: AnsiChar): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -1871,27 +1784,6 @@ const
 
   // used to negate a set of categories
   ClassAll = [Low(TCharacterCategory)..High(TCharacterCategory)];
-
-{$IFDEF HAS_UNIT_CHARACTER}
-function CharacterCategoriesToUnicodeCategory(const Categories: TCharacterCategories): TUnicodeCategory;
-var
-  Category: TCharacterUnicodeCategory;
-begin
-  for Category := Low(TCharacterUnicodeCategory) to High(TCharacterUnicodeCategory) do
-    if Category in Categories then
-  begin
-    Result := CharacterCategoryToUnicodeCategory[Category];
-    Exit;
-  end;
-  Result := TUnicodeCategory.ucUnassigned;
-end;
-
-function UnicodeCategoryToCharacterCategories(Category: TUnicodeCategory): TCharacterCategories;
-begin
-  Result := [];
-  Include(Result, UnicodeCategoryToCharacterCategory[Category]);
-end;
-{$ENDIF HAS_UNIT_CHARACTER}
 
 {$IFDEF UNICODE_RTL_DATABASE}
 procedure LoadCharacterCategories;
@@ -7956,20 +7848,9 @@ function GetCharSetFromLocale(Language: LCID; out FontCharSet: Byte): Boolean;
 const
   TCI_SRCLOCALE = $1000;
 var
-  CP: Word;
   CSI: TCharsetInfo;
 begin
-  if not JclCheckWinVersion(5, 0) then // Win2k required
-  begin
-    // these versions of Windows don't support TCI_SRCLOCALE
-    CP := CodePageFromLocale(Language);
-    if CP = 0 then
-      RaiseLastOSError;
-    Result := TranslateCharsetInfoEx(CP, CSI, TCI_SRCCODEPAGE);
-  end
-  else
-    Result := TranslateCharsetInfoEx(Language, CSI, TCI_SRCLOCALE);
-
+  Result := TranslateCharsetInfoEx(Language, CSI, TCI_SRCLOCALE);
   if Result then
     FontCharset := CSI.ciCharset;
 end;
@@ -8202,14 +8083,8 @@ initialization
   {$IFDEF MSWINDOWS}
   PrepareUnicodeData;
   {$ENDIF MSWINDOWS}
-  {$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-  {$ENDIF UNITVERSIONING}
 
 finalization
-  {$IFDEF UNITVERSIONING}
-  UnregisterUnitVersion(HInstance);
-  {$ENDIF UNITVERSIONING}
   {$IFDEF MSWINDOWS}
   FreeUnicodeData;
   {$ENDIF MSWINDOWS}

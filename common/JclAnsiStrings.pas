@@ -60,9 +60,6 @@ unit JclAnsiStrings;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Winapi.Windows,
@@ -577,18 +574,6 @@ var
   AnsiCaseMapReady: Boolean = False;         // true if case map exists
   AnsiCharTypes: array [AnsiChar] of Word;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
-
 implementation
 
 uses
@@ -603,7 +588,7 @@ uses
   {$ENDIF}
   {$ENDIF HAS_UNIT_RTLCONSTS}
   {$IFDEF FPC}
-  Character, FpLibcCompatibility, 
+  Character, FpLibcCompatibility,
   {$ENDIF}
   JclLogic, JclResources, JclStreams, JclSynch, JclSysUtils;
 
@@ -1410,9 +1395,9 @@ begin
 
   for I := Index to Count - 2 do
     FStrings[I] := FStrings[I + 1];
-    
+
   FStrings[FCount - 1].Str := '';  // the last string is no longer useful
-    
+
   Dec(FCount);
 end;
 
@@ -3239,7 +3224,7 @@ end;
 
 // JclSysUtils.TJclFormatSettings.GetDecimalSeparator is manually inlined in the 2 following functions
 // this fixes compiler warnings about functions not being inlined
- 
+
 function CharIsNumberChar(const C: AnsiChar): Boolean;
 begin
   Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or (C = AnsiSignMinus) or (C = AnsiSignPlus) or
@@ -4312,11 +4297,5 @@ end;
 initialization
   LoadCharTypes;  // this table first
   LoadCaseMap;    // or this function does not work
-{$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

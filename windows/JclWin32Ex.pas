@@ -33,9 +33,6 @@ unit JclWin32Ex;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   Winapi.Windows, System.SysUtils;
   {$ELSE ~HAS_UNITSCOPE}
@@ -79,18 +76,6 @@ function JclgluErrorString(errCode: Cardinal): PChar;
 function JclWin32ExFunctions: TJclWin32ExFunctions;
 
 procedure JclCheckAndInitializeOpenGL;
-
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\windows';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -394,15 +379,7 @@ begin
     raise EJclError.CreateResFmt(@RsELibraryNotFound, [opengl32]);
 end;
 
-initialization
-  {$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-  {$ENDIF UNITVERSIONING}
-
 finalization
-  {$IFDEF UNITVERSIONING}
-  UnregisterUnitVersion(HInstance);
-  {$ENDIF UNITVERSIONING}
   UnloadLibraries;
 
 end.

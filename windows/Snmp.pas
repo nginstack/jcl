@@ -50,20 +50,11 @@ interface
 {$ALIGN ON}
 {$MINENUMSIZE 4}
 
-{$IFNDEF SNMP_DYNAMIC_LINK}
-{$IFDEF SUPPORTS_WEAKPACKAGEUNIT}
-  {$WEAKPACKAGEUNIT ON}
-{$ENDIF SUPPORTS_WEAKPACKAGEUNIT}
-{$ENDIF ~SNMP_DYNAMIC_LINK}
-
 {$IFDEF UNICODE}
 {$A4}  // MANTIS 4931 - GetMacAddress crash in Delphi 2009. record alignment fix.
 {$ENDIF}
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   Winapi.Windows, System.SysUtils;
   {$ELSE ~HAS_UNITSCOPE}
@@ -676,18 +667,6 @@ function UnloadSnmp: Boolean;
 {$ENDIF SNMP_DYNAMIC_LINK_EXPLICIT}
 {$ENDIF SNMP_DYNAMIC_LINK}
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\windows';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
-
 implementation
 
 const
@@ -933,14 +912,8 @@ end;
 
 initialization
   InitializeSnmp;
-  {$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-  {$ENDIF UNITVERSIONING}
 
 finalization
   FinalizeSnmp;
-  {$IFDEF UNITVERSIONING}
-  UnregisterUnitVersion(HInstance);
-  {$ENDIF UNITVERSIONING}
 
 end.

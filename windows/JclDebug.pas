@@ -48,9 +48,6 @@ interface
 {$I windowsonly.inc}
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Winapi.Windows,
@@ -382,11 +379,11 @@ type
     BinaryFileName: string;         // Name of the binary file containing the symbol
   end;
 
-  TJclLocationInfoExValues = set of (lievLocationInfo, lievProcedureStartLocationInfo, lievUnitVersionInfo);
+  TJclLocationInfoExValues = set of (lievLocationInfo, lievProcedureStartLocationInfo);
 
   TJclCustomLocationInfoList = class;
 
-  TJclLocationInfoListOptions = set of (liloAutoGetAddressInfo, liloAutoGetLocationInfo, liloAutoGetUnitVersionInfo);
+  TJclLocationInfoListOptions = set of (liloAutoGetAddressInfo, liloAutoGetLocationInfo);
 
   TJclLocationInfoEx = class(TPersistent)
   private
@@ -402,11 +399,6 @@ type
     FProcedureName: string;
     FSourceName: string;
     FSourceUnitName: string;
-    FUnitVersionDateTime: TDateTime;
-    FUnitVersionExtra: string;
-    FUnitVersionLogPath: string;
-    FUnitVersionRCSfile: string;
-    FUnitVersionRevision: string;
     FVAddress: Pointer;
     FValues: TJclLocationInfoExValues;
     procedure Fill(AOptions: TJclLocationInfoListOptions);
@@ -430,11 +422,6 @@ type
     { this is equal to TJclLocationInfo.UnitName, but has been renamed because
       UnitName is a class function in TObject since Delphi 2009 }
     property SourceUnitName: string read FSourceUnitName write FSourceUnitName;
-    property UnitVersionDateTime: TDateTime read FUnitVersionDateTime write FUnitVersionDateTime;
-    property UnitVersionExtra: string read FUnitVersionExtra write FUnitVersionExtra;
-    property UnitVersionLogPath: string read FUnitVersionLogPath write FUnitVersionLogPath;
-    property UnitVersionRCSfile: string read FUnitVersionRCSfile write FUnitVersionRCSfile;
-    property UnitVersionRevision: string read FUnitVersionRevision write FUnitVersionRevision;
     property VAddress: Pointer read FVAddress write FVAddress;
     property Values: TJclLocationInfoExValues read FValues write FValues;
   end;
@@ -1001,7 +988,6 @@ function JclThreadsHooked: Boolean;
 
 // Miscellanuous
 {$IFDEF MSWINDOWS}
-function EnableCrashOnCtrlScroll(const Enable: Boolean): Boolean;
 function IsDebuggerAttached: Boolean;
 function IsHandleValid(Handle: THandle): Boolean;
 {$ENDIF MSWINDOWS}
@@ -1077,18 +1063,6 @@ function IsIgnoredException(const ExceptionClass: TClass): Boolean;
 // function to add additional system modules to be included in the stack trace
 procedure AddModule(const ModuleName: string);
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\windows';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
-
 implementation
 
 uses
@@ -1110,9 +1084,6 @@ uses
   Generics.Collections,
   {$ENDIF SUPPORTS_GENERICS}
   {$ENDIF ~HAS_UNITSCOPE}
-  {$IFDEF MSWINDOWS}
-  JclRegistry,
-  {$ENDIF MSWINDOWS}
   JclHookExcept, JclAnsiStrings, JclStrings, JclSysInfo, JclSysUtils, JclWin32,
   JclStringConversions, JclResources;
 
@@ -3639,11 +3610,6 @@ begin
     TJclLocationInfoEx(Dest).FProcedureName := FProcedureName;
     TJclLocationInfoEx(Dest).FSourceName := FSourceName;
     TJclLocationInfoEx(Dest).FSourceUnitName := FSourceUnitName;
-    TJclLocationInfoEx(Dest).FUnitVersionDateTime := FUnitVersionDateTime;
-    TJclLocationInfoEx(Dest).FUnitVersionExtra := FUnitVersionExtra;
-    TJclLocationInfoEx(Dest).FUnitVersionLogPath := FUnitVersionLogPath;
-    TJclLocationInfoEx(Dest).FUnitVersionRCSfile := FUnitVersionRCSfile;
-    TJclLocationInfoEx(Dest).FUnitVersionRevision := FUnitVersionRevision;
     TJclLocationInfoEx(Dest).FVAddress := FVAddress;
     TJclLocationInfoEx(Dest).FValues := FValues;
   end
@@ -3662,12 +3628,6 @@ var
   Info, StartProcInfo: TJclLocationInfo;
   FixedProcedureName: string;
   Module: HMODULE;
-  {$IFDEF UNITVERSIONING}
-  I: Integer;
-  UnitVersion: TUnitVersion;
-  UnitVersioning: TUnitVersioning;
-  UnitVersioningModule: TUnitVersioningModule;
-  {$ENDIF UNITVERSIONING}
 begin
   FValues := [];
   if liloAutoGetAddressInfo in AOptions then
@@ -3678,9 +3638,6 @@ begin
   end
   else
   begin
-    {$IFDEF UNITVERSIONING}
-    Module := 0;
-    {$ENDIF UNITVERSIONING}
     FVAddress := nil;
     FModuleName := '';
   end;
@@ -3722,37 +3679,6 @@ begin
     FDebugInfo := nil;
     FBinaryFileName := '';
   end;
-  FUnitVersionDateTime := 0;
-  FUnitVersionLogPath := '';
-  FUnitVersionRCSfile := '';
-  FUnitVersionRevision := '';
-  {$IFDEF UNITVERSIONING}
-  if (liloAutoGetUnitVersionInfo in AOptions) and (FSourceName <> '') then
-  begin
-    if not (liloAutoGetAddressInfo in AOptions) then
-      Module := ModuleFromAddr(FAddress);
-    UnitVersioning := GetUnitVersioning;
-    for I := 0 to UnitVersioning.ModuleCount - 1 do
-    begin
-      UnitVersioningModule := UnitVersioning.Modules[I];
-      if UnitVersioningModule.Instance = Module then
-      begin
-        UnitVersion := UnitVersioningModule.FindUnit(FSourceName);
-        if Assigned(UnitVersion) then
-        begin
-          FUnitVersionDateTime := UnitVersion.DateTime;
-          FUnitVersionLogPath := UnitVersion.LogPath;
-          FUnitVersionRCSfile := UnitVersion.RCSfile;
-          FUnitVersionRevision := UnitVersion.Revision;
-          FValues := FValues + [lievUnitVersionInfo];
-          Break;
-        end;
-      end;
-      if lievUnitVersionInfo in FValues then
-        Break;
-    end;
-  end;
-  {$ENDIF UNITVERSIONING}
 end;
 
 { TODO -oUSc : Include... better as function than property? }
@@ -3892,7 +3818,7 @@ end;
 constructor TJclLocationInfoList.Create;
 begin
   inherited Create;
-  FOptions := [liloAutoGetAddressInfo, liloAutoGetLocationInfo, liloAutoGetUnitVersionInfo];
+  FOptions := [liloAutoGetAddressInfo, liloAutoGetLocationInfo];
 end;
 
 function TJclLocationInfoList.GetItems(AIndex: Integer): TJclLocationInfoEx;
@@ -4538,12 +4464,8 @@ begin
         // Fix crash SymLoadModuleFunc on WinXP SP3 when SearchPath=''
         SearchPath := GetCurrentFolder;
 
-      if IsWinNT then
-        // in Windows NT, first argument is a process handle
-        ProcessHandle := GetCurrentProcess
-      else
-        // in Windows 95, 98, ME first argument is a process identifier
-        ProcessHandle := GetCurrentProcessId;
+      // in Windows NT, first argument is a process handle
+      ProcessHandle := GetCurrentProcess;
 
       // Debug(WinXPSP3): SymInitializeWFunc==nil
       if Assigned(SymInitializeWFunc) then
@@ -4713,12 +4635,8 @@ begin
   Result := InitializeDebugSymbols;
   if Result then
   begin
-    if IsWinNT then
-      // in Windows NT, first argument is a process handle
-      ProcessHandle := GetCurrentProcess
-    else
-      // in Windows 95, 98, ME, first argument is a process identifier
-      ProcessHandle := GetCurrentProcessId;
+    // in Windows NT, first argument is a process handle
+    ProcessHandle := GetCurrentProcess;
 
     if Assigned(SymGetModuleInfoWFunc) then
     begin
@@ -5745,14 +5663,7 @@ var
   StackInfo: TStackInfo;
   CapturedFramesCount: Word;
 begin
-  if JclCheckWinVersion(6, 0) then
-    MaxFrames := Length(BackTrace)
-  else
-  begin
-    // For XP and 2003 sum of FramesToSkip and FramesToCapture must be lower than 63
-    MaxFrames := 62 - InternalSkipFrames;
-  end;
-
+  MaxFrames := Length(BackTrace);
   ResetMemory(BackTrace, SizeOf(BackTrace));
   CapturedFramesCount := CaptureStackBackTrace(InternalSkipFrames, MaxFrames, @BackTrace, Hash);
 
@@ -7836,20 +7747,6 @@ end;
 
 {$IFDEF MSWINDOWS}
 
-function EnableCrashOnCtrlScroll(const Enable: Boolean): Boolean;
-const
-  CrashCtrlScrollKey = 'SYSTEM\CurrentControlSet\Services\i8042prt\Parameters';
-  CrashCtrlScrollName = 'CrashOnCtrlScroll';
-var
-  Enabled: Integer;
-begin
-  Enabled := 0;
-  if Enable then
-    Enabled := 1;
-  RegWriteInteger(HKEY_LOCAL_MACHINE, CrashCtrlScrollKey, CrashCtrlScrollName, Enabled);
-  Result := RegReadInteger(HKEY_LOCAL_MACHINE, CrashCtrlScrollKey, CrashCtrlScrollName) = Enabled;
-end;
-
 function IsDebuggerAttached: Boolean;
 var
   IsDebuggerPresent: function: Boolean; stdcall;
@@ -7876,13 +7773,9 @@ var
   Duplicate: THandle;
   Flags: DWORD;
 begin
-  if IsWinNT then
-  begin
-    Flags := 0;
-    Result := GetHandleInformation(Handle, Flags);
-  end
-  else
-    Result := False;
+  Flags := 0;
+  Result := GetHandleInformation(Handle, Flags);
+
   if not Result then
   begin
     // DuplicateHandle is used as an additional check for those object types not
@@ -8086,17 +7979,11 @@ initialization
   GlobalModulesList := TJclGlobalModulesList.Create;
   GlobalStackList := TJclGlobalStackList.Create;
   AddIgnoredException(EAbort);
-  {$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_EXCEPTION_STACKTRACE}
   SetupExceptionProcs;
   {$ENDIF HAS_EXCEPTION_STACKTRACE}
 
 finalization
-  {$IFDEF UNITVERSIONING}
-  UnregisterUnitVersion(HInstance);
-  {$ENDIF UNITVERSIONING}
 
   { TODO -oPV -cInvestigate : Calling JclStopExceptionTracking causes linking of various classes to
     the code without a real need. Although there doesn't seem to be a way to unhook exceptions

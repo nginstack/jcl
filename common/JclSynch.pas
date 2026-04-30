@@ -44,9 +44,6 @@ unit JclSynch;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Winapi.Windows, JclWin32,
@@ -146,20 +143,6 @@ type
   end;
 
 {$IFDEF MSWINDOWS}
-  TJclCriticalSectionEx = class(TJclCriticalSection)
-  private
-    FSpinCount: Cardinal;
-    function GetSpinCount: Cardinal;
-    procedure SetSpinCount(const Value: Cardinal);
-  public
-    constructor Create; override;
-    constructor CreateEx(SpinCount: Cardinal; NoFailEnter: Boolean); virtual;
-    class function GetSpinTimeOut: Cardinal;
-    class procedure SetSpinTimeOut(const Value: Cardinal);
-    function TryEnter: Boolean;
-    property SpinCount: Cardinal read GetSpinCount write SetSpinCount;
-  end;
-
   TJclEvent = class(TJclDispatcherObject)
   public
     constructor Create(SecAttr: PSecurityAttributes; Manual, Signaled: Boolean; const Name: string);
@@ -195,37 +178,6 @@ type
     constructor Open(Access: Cardinal; Inheritable: Boolean; const Name: string);
     function Acquire(const TimeOut: Cardinal = INFINITE): Boolean;
     function Release: Boolean;
-  end;
-
-  POptexSharedInfo = ^TOptexSharedInfo;
-  TOptexSharedInfo = record
-    SpinCount: Integer;      // number of times to try and enter the optex before
-                             // waiting on kernel event, 0 on single processor
-    LockCount: Integer;      // count of enter attempts
-    ThreadId: Longword;      // id of thread that owns the optex, 0 if free
-    RecursionCount: Integer; // number of times the optex is owned, 0 if free
-  end;
-
-  TJclOptex = class(TObject)
-  private
-    FEvent: TJclEvent;
-    FExisted: Boolean;
-    FFileMapping: THandle;
-    FName: string;
-    FSharedInfo: POptexSharedInfo;
-    function GetUniProcess: Boolean;
-    function GetSpinCount: Integer;
-    procedure SetSpinCount(Value: Integer);
-  public
-    constructor Create(const Name: string = ''; SpinCount: Integer = 4000);
-    destructor Destroy; override;
-    procedure Enter;
-    procedure Leave;
-    function TryEnter: Boolean;
-    property Existed: Boolean read FExisted;
-    property Name: string read FName;
-    property SpinCount: Integer read GetSpinCount write SetSpinCount;
-    property UniProcess: Boolean read GetUniProcess;
   end;
 
   TMrewPreferred = (mpReaders, mpWriters, mpEqual);
@@ -350,17 +302,6 @@ function ValidateMutexName(const aName: string): string;
 {$ENDIF MSWINDOWS}
 
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -370,9 +311,6 @@ uses
   {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
   {$ENDIF ~HAS_UNITSCOPE}
-  {$IFDEF MSWINDOWS}
-  JclRegistry,
-  {$ENDIF MSWINDOWS}
   JclLogic, JclResources,
   JclSysInfo, JclStrings;
 
@@ -1081,63 +1019,6 @@ begin
 end;
 
 {$IFDEF MSWINDOWS}
-//== { TJclCriticalSectionEx } ===============================================
-
-const
-  DefaultCritSectSpinCount = 4000;
-
-constructor TJclCriticalSectionEx.Create;
-begin
-  CreateEx(DefaultCritSectSpinCount, False);
-end;
-
-{ TODO: Use RTDL Version of InitializeCriticalSectionAndSpinCount }
-
-constructor TJclCriticalSectionEx.CreateEx(SpinCount: Cardinal;
-  NoFailEnter: Boolean);
-begin
-  FSpinCount := SpinCount;
-  if NoFailEnter then
-    SpinCount := SpinCount or Cardinal($80000000);
-
-  if not InitializeCriticalSectionAndSpinCount(FCriticalSection, SpinCount) then
-    raise EJclCriticalSectionError.CreateRes(@RsSynchInitCriticalSection);
-end;
-
-function TJclCriticalSectionEx.GetSpinCount: Cardinal;
-begin
-  // Spinning only makes sense on multiprocessor systems. On a single processor
-  // system the thread would simply waste cycles while the owning thread is
-  // suspended and thus cannot release the critical section.
-  if ProcessorCount = 1 then
-    Result := 0
-  else
-    Result := FSpinCount;
-end;
-
-class function TJclCriticalSectionEx.GetSpinTimeOut: Cardinal;
-begin
-  Result := Cardinal(RegReadInteger(HKEY_LOCAL_MACHINE, RegSessionManager,
-    RegCritSecTimeout));
-end;
-
-{ TODO: Use RTLD version of SetCriticalSectionSpinCount }
-procedure TJclCriticalSectionEx.SetSpinCount(const Value: Cardinal);
-begin
-  FSpinCount := SetCriticalSectionSpinCount(FCriticalSection, Value);
-end;
-
-class procedure TJclCriticalSectionEx.SetSpinTimeOut(const Value: Cardinal);
-begin
-  RegWriteInteger(HKEY_LOCAL_MACHINE, RegSessionManager, RegCritSecTimeout,
-    Integer(Value));
-end;
-
-{ TODO: Use RTLD version of TryEnterCriticalSection }
-function TJclCriticalSectionEx.TryEnter: Boolean;
-begin
-  Result := TryEnterCriticalSection(FCriticalSection);
-end;
 
 //== { TJclEvent } ===========================================================
 
@@ -1298,144 +1179,6 @@ end;
 function TJclMutex.Release: Boolean;
 begin
   Result := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.ReleaseMutex(FHandle);
-end;
-
-//=== { TJclOptex } ==========================================================
-
-constructor TJclOptex.Create(const Name: string; SpinCount: Integer);
-begin
-  FExisted := False;
-  FName := Name;
-  if Name = '' then
-  begin
-    // None shared optex, don't need filemapping, sharedinfo is local
-    FFileMapping := 0;
-    FEvent := TJclEvent.Create(nil, False, False, '');
-    FSharedInfo := AllocMem(SizeOf(TOptexSharedInfo));
-  end
-  else
-  begin
-    // Shared optex, event protects access to sharedinfo. Creation of filemapping
-    // doesn't need protection as it will automatically "open" instead of "create"
-    // if another process already created it.
-    FEvent := TJclEvent.Create(nil, False, False, 'Optex_Event_' + Name);
-    FExisted := FEvent.Existed;
-    FFileMapping := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.CreateFileMapping(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE,
-      0, SizeOf(TOptexSharedInfo), PChar('Optex_MMF_' + Name));
-    Assert(FFileMapping <> 0);
-    FSharedInfo := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.MapViewOfFile(FFileMapping, FILE_MAP_WRITE, 0, 0, 0);
-    Assert(FSharedInfo <> nil);
-  end;
-  SetSpinCount(SpinCount);
-end;
-
-destructor TJclOptex.Destroy;
-begin
-  FreeAndNil(FEvent);
-  if UniProcess then
-    FreeMem(FSharedInfo)
-  else
-  begin
-    {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.UnmapViewOfFile(FSharedInfo);
-    {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.CloseHandle(FFileMapping);
-  end;
-  inherited Destroy;
-end;
-
-procedure TJclOptex.Enter;
-var
-  ThreadId: Longword;
-begin
-  if TryEnter then
-    Exit;
-  ThreadId := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetCurrentThreadId;
-  if {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.InterlockedIncrement(FSharedInfo^.LockCount) = 1 then
-  begin
-    // Optex was unowned
-    FSharedInfo^.ThreadId := ThreadId;
-    FSharedInfo^.RecursionCount := 1;
-  end
-  else
-  begin
-    if FSharedInfo^.ThreadId = ThreadId then
-    begin
-      // We already owned it, increase ownership count
-      Inc(FSharedInfo^.RecursionCount)
-    end
-    else
-    begin
-      // Optex is owner by someone else, wait for it to be released and then
-      // immediately take ownership
-      FEvent.WaitForever;
-      FSharedInfo^.ThreadId := ThreadId;
-      FSharedInfo^.RecursionCount := 1;
-    end;
-  end;
-end;
-
-function TJclOptex.GetSpinCount: Integer;
-begin
-  Result := FSharedInfo^.SpinCount;
-end;
-
-function TJclOptex.GetUniProcess: Boolean;
-begin
-  Result := FFileMapping = 0;
-end;
-
-procedure TJclOptex.Leave;
-begin
-  Dec(FSharedInfo^.RecursionCount);
-  if FSharedInfo^.RecursionCount > 0 then
-    {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.InterlockedDecrement(FSharedInfo^.LockCount)
-  else
-  begin
-    FSharedInfo^.ThreadId := 0;
-    if {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.InterlockedDecrement(FSharedInfo^.LockCount) > 0 then
-      FEvent.SetEvent;
-  end;
-end;
-
-procedure TJclOptex.SetSpinCount(Value: Integer);
-begin
-  if Value < 0 then
-    Value := DefaultCritSectSpinCount;
-  // Spinning only makes sense on multiprocessor systems
-  if ProcessorCount > 1 then
-    {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.InterlockedExchange(Integer(FSharedInfo^.SpinCount), Value);
-end;
-
-function TJclOptex.TryEnter: Boolean;
-var
-  ThreadId: Longword;
-  ThreadOwnsOptex: Boolean;
-  SpinCount: Integer;
-begin
-  ThreadId := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetCurrentThreadId;
-  SpinCount := FSharedInfo^.SpinCount;
-  repeat
-    //ThreadOwnsOptex := InterlockedCompareExchange(Pointer(FSharedInfo^.LockCount),
-    //  Pointer(1), Pointer(0)) = Pointer(0); // not available on win95
-    ThreadOwnsOptex := LockedCompareExchange(FSharedInfo^.LockCount, 1, 0) = 0;
-    if ThreadOwnsOptex then
-    begin
-      // Optex was unowned
-      FSharedInfo^.ThreadId := ThreadId;
-      FSharedInfo^.RecursionCount := 1;
-    end
-    else
-    begin
-      if FSharedInfo^.ThreadId = ThreadId then
-      begin
-        // We already owned the Optex
-        {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.InterlockedIncrement(FSharedInfo^.LockCount);
-        Inc(FSharedInfo^.RecursionCount);
-        ThreadOwnsOptex := True;
-      end;
-    end;
-    Dec(SpinCount);
-  until ThreadOwnsOptex or (SpinCount <= 0);
-  Result := ThreadOwnsOptex;
 end;
 
 //=== { TJclMultiReadExclusiveWrite } ========================================
@@ -1965,13 +1708,5 @@ begin
 end;
 
 
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

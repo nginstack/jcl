@@ -50,10 +50,6 @@ unit JclResources;
 
 interface
 
-{$IFDEF UNITVERSIONING}
-uses
-  JclUnitVersioning;
-{$ENDIF UNITVERSIONING}
 
 //=== JclBase ================================================================
 resourcestring
@@ -1342,23 +1338,6 @@ resourcestring
   RsPowerInfinite      = 'Power function: Result is infinite';
   RsPowerComplex       = 'Power function: Result is complex';
 
-//=== JclMiscel ==============================================================
-resourcestring
-  // CreateProcAsUser
-  RsCreateProcNTRequiredError         = 'Windows NT required';
-  RsCreateProcBuild1057Error          = 'NT version 3.51 build 1057 or later required';
-
-  RsCreateProcPrivilegeMissing        = 'This account does not have the privilege "%s" (%s)';
-  RsCreateProcLogonUserError          = 'LogonUser failed';
-  RsCreateProcAccessDenied            = 'Access denied';
-  RsCreateProcLogonFailed             = 'Unable to logon';
-  RsCreateProcSetStationSecurityError = 'Cannot set WindowStation "%s" security.';
-  RsCreateProcSetDesktopSecurityError = 'Cannot set Desktop "%s" security.';
-  RsCreateProcPrivilegesMissing       = 'This account does not have one (or more) of ' +
-    'the following privileges: ' + '"%s"(%s)' + sLineBreak + '"%s"(%s)' + sLineBreak;
-  RsCreateProcCommandNotFound         = 'Command or filename not found: "%s"';
-  RsCreateProcFailed                  = 'CreateProcessAsUser failed';
-
 //=== JclMultimedia ==========================================================
 resourcestring
   // Multimedia timer
@@ -1451,7 +1430,7 @@ resourcestring
   // TJclPeImage
   RsPeCantOpen                = 'Cannot open file "%s"';
   RsPeNotPE                   = 'This is not a PE format';
-  RsPeUnknownTarget           = 'Unknown PE target'; 
+  RsPeUnknownTarget           = 'Unknown PE target';
   RsPeNotResDir               = 'Not a resource directory';
   RsPeNotAvailableForAttached = 'Feature is not available for attached images';
   RsPeSectionNotFound         = 'Section "%s" not found';
@@ -1600,21 +1579,13 @@ resourcestring
   RsPePkgOrgWeak  = 'OrgWeak';
   RsPePkgImplicit = 'Implicit';
 
-//=== JclRegistry ============================================================
-resourcestring
-  RsUnableToOpenKeyRead  = 'Unable to open key "%s\%s" for read';
-  RsUnableToOpenKeyWrite = 'Unable to open key "%s\%s" for write';
-  RsUnableToAccessValue  = 'Unable to open key "%s\%s" and access value "%s"';
-  RsWrongDataType        = '"%s\%s\%s" is of wrong kind or size';
-  RsInconsistentPath     = '"%s" does not match RootKey';
-
 //=== JclRTTI ================================================================
 resourcestring
   RsRTTISetValueOutOfRange  = 'Set value over %s does not fit into a 32-bit integer.';
   RsRTTIValueOutOfRange   = 'Value %s out of range %s..%s.';
   RsRTTIUnknownIdentifier = 'Unknown identifier ''%s''.';
   RsRTTIInvalidBaseType   = 'Invalid base type (%s is of type %s).';
-  RsRTTINoStringValue     = 'The property %s of type %s has no string value'; 
+  RsRTTINoStringValue     = 'The property %s of type %s has no string value';
 
   RsRTTIVar           = 'var ';
   RsRTTIConst         = 'const ';
@@ -1675,12 +1646,6 @@ resourcestring
   RsScheduleDayNotSupported = 'Property Day not supported for current IndexKind';
   RsScheduleDayInRange      = 'Day values should fall in the range 1 .. 31';
   RsScheduleMonthInRange    = 'Month values should fall in the range 1 .. 12';
-
-//=== JclSecurity ============================================================
-resourcestring
-  RsInvalidSID = 'Invalid SID';
-  RsSIDBufferTooSmall = 'SID buffer too small.';
-  RsLsaError = 'LSA Error: NT Status = %.8x, message: %s'; 
 
 //=== JclSimpleXml ===========================================================
 resourcestring
@@ -2013,26 +1978,7 @@ resourcestring
   RsMidiInUnknownError  = 'Unknown MIDI-In error No. %d';
   RsMidiOutUnknownError = 'Unknown MIDI-Out error No. %d';
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

@@ -63,9 +63,6 @@ unit JclStrings;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Winapi.Windows,
@@ -624,17 +621,6 @@ var
   StrCharTypes: array [Char] of Word;
 {$ENDIF ~UNICODE_RTL_DATABASE}
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -5425,14 +5411,6 @@ initialization
   LoadCharTypes;  // this table first
   LoadCaseMap;    // or this function does not work
   {$ENDIF ~UNICODE_RTL_DATABASE}
-  {$IFDEF UNITVERSIONING}
-  RegisterUnitVersion(HInstance, UnitVersioning);
-  {$ENDIF UNITVERSIONING}
-
-{$IFDEF UNITVERSIONING}
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.
 

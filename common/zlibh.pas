@@ -71,9 +71,6 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   JclBase,
   JclSysUtils;
 
@@ -178,7 +175,7 @@ const
   {$EXTERNALSYM SEEK_CUR}
   SEEK_CUR = 1;       // Seek from current position.
   {$EXTERNALSYM SEEK_END}
-  SEEK_END = 2;       // Set file pointer to EOF plus "offset" 
+  SEEK_END = 2;       // Set file pointer to EOF plus "offset"
 
 //-----------------------------------------------------------------------------
 // END of the contents of the converted ZCONF.H
@@ -2149,18 +2146,6 @@ function IsZLibLoaded: Boolean;
 function LoadZLib: Boolean;
 procedure UnloadZLib;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-  );
-{$ENDIF UNITVERSIONING}
-
 implementation
 
 {$IFNDEF ZLIB_RTL}
@@ -2496,14 +2481,6 @@ function get_crc_table;        external ZLibDefaultLibraryName name ZLibget_crc_
 {$ENDIF ZLIB_LINKDLL}
 
 {$ENDIF ~ZLIB_RTL}
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.
 

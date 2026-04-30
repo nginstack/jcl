@@ -46,9 +46,6 @@ unit JclWideStrings;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   System.Classes, System.SysUtils,
   {$ELSE ~HAS_UNITSCOPE}
@@ -341,17 +338,6 @@ procedure AllocateMultiSz(var Dest: PWideMultiSz; Len: SizeInt);
 procedure FreeMultiSz(var Dest: PWideMultiSz);
 function MultiSzDup(const Source: PWideMultiSz): PWideMultiSz;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -2310,13 +2296,5 @@ begin
   else
     Result := nil;
 end;
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.

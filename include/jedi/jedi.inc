@@ -619,7 +619,6 @@
   SUPPORTS_LIBRARY_WARNINGS      Compiler supports library warnings (D6+/BCB6+)
   SUPPORTS_PLATFORM_WARNINGS     Compiler supports platform warnings (D6+/BCB6+)
   SUPPORTS_UNSAFE_WARNINGS       Compiler supports unsafe warnings (D7+)
-  SUPPORTS_WEAKPACKAGEUNIT       Compiler supports the WEAKPACKAGEUNIT directive (D3+)
   SUPPORTS_COMPILETIME_MESSAGES  Compiler supports the MESSAGE directive (D6+)
   SUPPORTS_PACKAGES              Compiler supports Packages (D1+)
   HAS_UNIT_LIBC                  Unit Libc exists (Kylix, FPC on Linux/x86)
@@ -1842,7 +1841,6 @@
       {$IF defined(FPC_FULLVERSION) and (FPC_FULLVERSION >= 30200)}
         {$DEFINE SUPPORTS_GENERIC_METHODS}
         {$DEFINE SUPPORTS_GENERIC_ROUTINES}
-        {$DEFINE SUPPORTS_WEAKPACKAGEUNIT}
 
         {$DEFINE HAS_UNIT_RTTI}
         {$DEFINE HAS_UNIT_SYSTEM_UITYPES}
@@ -1896,7 +1894,6 @@
   {$DEFINE SUPPORTS_INTERFACE}
   {$DEFINE SUPPORTS_DISPINTERFACE}
   {$DEFINE SUPPORTS_DISPID}
-  {$DEFINE SUPPORTS_WEAKPACKAGEUNIT}
 {$ENDIF COMPILER3_UP}
 
 {$IFDEF COMPILER35_UP}
@@ -2153,8 +2150,5 @@
 
 // Warnings
 {$IFOPT X+} {$DEFINE EXTENDEDSYNTAX_ON} {$ENDIF}
-
-// for Delphi/BCB trial versions remove the point from the line below
-{.$UNDEF SUPPORTS_WEAKPACKAGEUNIT}
 
 {$ENDIF ~JEDI_INC}

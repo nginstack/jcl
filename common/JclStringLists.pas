@@ -38,9 +38,6 @@ unit JclStringLists;
 interface
 
 uses
-  {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
-  {$ENDIF UNITVERSIONING}
   {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Winapi.Windows,
@@ -97,7 +94,7 @@ type
     function GetSorted: Boolean;
     function Equals(Strings: TStrings): Boolean;
     function IndexOfName(const Name: string): Integer;
-    function IndexOfObject(AObject: TObject): Integer; 
+    function IndexOfObject(AObject: TObject): Integer;
     function LoadFromFile(const FileName: string): IJclStringList;
     function LoadFromStream(Stream: TStream): IJclStringList;
     function SaveToFile(const FileName: string): IJclStringList;
@@ -399,17 +396,6 @@ function JclStringListStrings(const A: array of string): IJclStringList; overloa
 function JclStringList(const A: array of const): IJclStringList; overload;
 function JclStringList(const AText: string): IJclStringList; overload;
 
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL$';
-    Revision: '$Revision$';
-    Date: '$Date$';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -1439,13 +1425,5 @@ function TJclStringList.GetObjectsMode: TJclStringListObjectsMode;
 begin
   Result := FObjectsMode;
 end;
-
-{$IFDEF UNITVERSIONING}
-initialization
-  RegisterUnitVersion(HInstance, UnitVersioning);
-
-finalization
-  UnregisterUnitVersion(HInstance);
-{$ENDIF UNITVERSIONING}
 
 end.
