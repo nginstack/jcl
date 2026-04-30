@@ -624,9 +624,21 @@ type
     FFileFlags: TFileFlags;
     FItemList: TStringList;
     FItems: TStringList;
+    FLanguages: array of TLangIdRec;
+    FLanguageIndex: Integer;
+    FTranslations: array of TLangIdRec;
     function GetFixedInfo: TVSFixedFileInfo;
     function GetItems: TStrings;
+    function GetLanguageCount: Integer;
+    function GetLanguageIds(Index: Integer): string;
+    function GetLanguageNames(Index: Integer): string;
+    function GetLanguages(Index: Integer): TLangIdRec;
+    function GetTranslationCount: Integer;
+    function GetTranslations(Index: Integer): TLangIdRec;
+    procedure SetLanguageIndex(const Value: Integer);
   protected
+    procedure CreateItemsForLanguage;
+    procedure CheckLanguageIndex(Value: Integer);
     procedure ExtractData;
     procedure ExtractFlags;
     function GetBinFileVersion: string;
@@ -651,6 +663,8 @@ type
     {$ENDIF MSWINDOWS}
     destructor Destroy; override;
     function GetCustomFieldValue(const FieldName: string): string;
+    class function VersionLanguageId(const LangIdRec: TLangIdRec): string;
+    class function VersionLanguageName(const LangId: Word): string;
     property BinFileVersion: string read GetBinFileVersion;
     property BinProductVersion: string read GetBinProductVersion;
     property Comments: string index 1 read GetVersionKeyValue;
@@ -668,6 +682,11 @@ type
     property FileVersionRelease: string read GetFileVersionRelease;
     property Items: TStrings read GetItems;
     property InternalName: string index 5 read GetVersionKeyValue;
+    property LanguageCount: Integer read GetLanguageCount;
+    property LanguageIds[Index: Integer]: string read GetLanguageIds;
+    property LanguageIndex: Integer read FLanguageIndex write SetLanguageIndex;
+    property Languages[Index: Integer]: TLangIdRec read GetLanguages;
+    property LanguageNames[Index: Integer]: string read GetLanguageNames;
     property LegalCopyright: string index 6 read GetVersionKeyValue;
     property LegalTradeMarks: string index 7 read GetVersionKeyValue;
     property OriginalFilename: string index 8 read GetVersionKeyValue;
@@ -679,6 +698,8 @@ type
     property ProductVersionMinor: string read GetProductVersionMinor;
     property ProductVersionRelease: string read GetProductVersionRelease;
     property SpecialBuild: string index 11 read GetVersionKeyValue;
+    property TranslationCount: Integer read GetTranslationCount;
+    property Translations[Index: Integer]: TLangIdRec read GetTranslations;
   end;
 
 function OSIdentToString(const OSIdent: DWORD): string;
@@ -4307,6 +4328,22 @@ begin
   inherited Destroy;
 end;
 
+procedure TJclFileVersionInfo.CheckLanguageIndex(Value: Integer);
+begin
+  if (Value < 0) or (Value >= LanguageCount) then
+    raise EJclFileVersionInfoError.CreateRes(@RsFileUtilsLanguageIndex);
+end;
+
+procedure TJclFileVersionInfo.CreateItemsForLanguage;
+var
+  I: Integer;
+begin
+  Items.Clear;
+  for I := 0 to FItemList.Count - 1 do
+    if Integer(FItemList.Objects[I]) = FLanguageIndex then
+      Items.AddObject(FItemList[I], Pointer(FLanguages[FLanguageIndex].Pair));
+end;
+
 procedure TJclFileVersionInfo.ExtractData;
 var
   Data, EndOfData: PAnsiChar;
@@ -4392,6 +4429,7 @@ var
   var
     EndPtr, EndStringPtr: PAnsiChar;
     LangIndex: Integer;
+    LangIdRec: TLangIdRec;
     Value: string;
   begin
     EndPtr := Data + Size;
@@ -4406,6 +4444,10 @@ var
         Break;
       end;
       Padding(Data);
+      LangIdRec.LangId := StrToIntDef('$' + Copy(Key, 1, 4), 0);
+      LangIdRec.CodePage := StrToIntDef('$' + Copy(Key, 5, 4), 0);
+      SetLength(FLanguages, LangIndex + 1);
+      FLanguages[LangIndex] := LangIdRec;
 
       EndStringPtr := Data + Len - HeaderSize;
       while not Error and (Data < EndStringPtr) do
@@ -4447,15 +4489,17 @@ var
 
   procedure ProcessVarInfo;
   var
-    index: Integer;
-    count: Integer;
+    TranslationIndex: Integer;
   begin
     GetHeader; // Var
     if SameText(Key, 'Translation') then
     begin
-      count := ValueLen div SizeOf(TLangIdRec);
-      for index := 0 to count - 1 do
-        Inc(data, SizeOf(TLangIdRec));
+      SetLength(FTranslations, ValueLen div SizeOf(TLangIdRec));
+      for TranslationIndex := 0 to Length(FTranslations) - 1 do
+      begin
+        FTranslations[TranslationIndex] := PLangIdRec(Data)^;
+        Inc(Data, SizeOf(TLangIdRec));
+      end;
     end;
   end;
 
@@ -4488,10 +4532,45 @@ begin
         Break;
     end;
     ExtractFlags;
+    CreateItemsForLanguage;
   end;
   if Error then
     raise EJclFileVersionInfoError.CreateRes(@RsFileUtilsNoVersionInfo);
 end;
+
+function TJclFileVersionInfo.GetLanguageCount: Integer;
+begin
+  Result := Length(FLanguages);
+end;
+
+function TJclFileVersionInfo.GetLanguageIds(Index: Integer): string;
+begin
+  CheckLanguageIndex(Index);
+  Result := VersionLanguageId(FLanguages[Index]);
+end;
+
+function TJclFileVersionInfo.GetLanguages(Index: Integer): TLangIdRec;
+begin
+  CheckLanguageIndex(Index);
+  Result := FLanguages[Index];
+end;
+
+function TJclFileVersionInfo.GetLanguageNames(Index: Integer): string;
+begin
+  CheckLanguageIndex(Index);
+  Result := VersionLanguageName(FLanguages[Index].LangId);
+end;
+
+function TJclFileVersionInfo.GetTranslationCount: Integer;
+begin
+  Result := Length(FTranslations);
+end;
+
+function TJclFileVersionInfo.GetTranslations(Index: Integer): TLangIdRec;
+begin
+  Result := FTranslations[Index];
+end;
+
 
 procedure TJclFileVersionInfo.ExtractFlags;
 var
@@ -4660,6 +4739,31 @@ end;
 function TJclFileVersionInfo.GetVersionKeyValue(Index: Integer): string;
 begin
   Result := Items.Values[VerKeyNames[Index]];
+end;
+
+procedure TJclFileVersionInfo.SetLanguageIndex(const Value: Integer);
+begin
+  CheckLanguageIndex(Value);
+  if FLanguageIndex <> Value then
+  begin
+    FLanguageIndex := Value;
+    CreateItemsForLanguage;
+  end;
+end;
+
+class function TJclFileVersionInfo.VersionLanguageId(const LangIdRec: TLangIdRec): string;
+begin
+  with LangIdRec do
+    Result := Format('%.4x%.4x', [LangId, CodePage]);
+end;
+
+class function TJclFileVersionInfo.VersionLanguageName(const LangId: Word): string;
+var
+  R: DWORD;
+begin
+  SetLength(Result, MAX_PATH);
+  R := VerLanguageName(LangId, PChar(Result), MAX_PATH);
+  SetLength(Result, R);
 end;
 
 {$ENDIF MSWINDOWS}
