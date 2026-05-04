@@ -541,14 +541,10 @@ const
 implementation
 
 uses
-  {$IFDEF COMPILER11_UP}
-  Winapi.Windows,
-  {$ENDIF COMPILER11_UP}
-  {$IFDEF HAS_UNIT_ANSISTRINGS}
-  System.AnsiStrings,
-  {$ENDIF HAS_UNIT_ANSISTRINGS}
-  System.Character,
-  System.SysUtils,
+{$IFDEF MSWINDOWS}Winapi.Windows,{$ENDIF}
+{$IFDEF HAS_UNIT_ANSISTRINGS}AnsiStrings,{$ENDIF HAS_UNIT_ANSISTRINGS}
+  Character,
+  SysUtils,
   JclAnsiStrings, JclStringConversions, JclUnicode;
 
 function IntfSimpleCompare(const Obj1, Obj2: IInterface): Integer;
