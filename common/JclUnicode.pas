@@ -1124,7 +1124,7 @@ function UCS4ArrayEquals(const Left: TUCS4Array; Right: AnsiChar): Boolean; over
 implementation
 
 uses
-  System.RtlConsts, JclResources, JclSynch, JclSysUtils, JclSysInfo, JclStringConversions,
+  RtlConsts, JclResources, JclSynch, JclSysUtils, JclSysInfo, JclStringConversions,
   JclWideStrings;
 
 const
