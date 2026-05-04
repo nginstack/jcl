@@ -330,7 +330,6 @@ function StrIsAlpha(const S: AnsiString): Boolean;
 function StrIsAlphaNum(const S: AnsiString): Boolean;
 function StrIsAlphaNumUnderscore(const S: AnsiString): Boolean;
 function StrContainsChars(const S: AnsiString; Chars: TSysCharSet; CheckAll: Boolean): Boolean;
-function StrConsistsOfNumberChars(const S: AnsiString): Boolean;
 function StrIsDigit(const S: AnsiString): Boolean;
 function StrIsSubset(const S: AnsiString; const ValidChars: TSysCharSet): Boolean;
 function StrSame(const S1, S2: AnsiString): Boolean;
@@ -370,7 +369,6 @@ procedure StrSkipChars(var S: PAnsiChar; const Chars: TSysCharSet); overload;
 procedure StrSkipChars(const S: AnsiString; var Index: SizeInt; const Chars: TSysCharSet); overload;
 function StrSmartCase(const S: AnsiString; Delimiters: TSysCharSet): AnsiString;
 function StrStringToEscaped(const S: AnsiString): AnsiString;
-function StrStripNonNumberChars(const S: AnsiString): AnsiString;
 function StrToHex(const Source: AnsiString): AnsiString;
 function StrTrimCharLeft(const S: AnsiString; C: AnsiChar): AnsiString;
 function StrTrimCharsLeft(const S: AnsiString; const Chars: TSysCharSet): AnsiString;
@@ -455,8 +453,6 @@ function CharIsDigit(const C: AnsiChar): Boolean; {$IFDEF SUPPORTS_INLINE} inlin
 function CharIsFracDigit(const C: AnsiChar): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsHexDigit(const C: AnsiChar): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsLower(const C: AnsiChar): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
-function CharIsNumberChar(const C: AnsiChar): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
-function CharIsNumber(const C: AnsiChar): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsPrintable(const C: AnsiChar): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsPunctuation(const C: AnsiChar): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsReturn(const C: AnsiChar): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
@@ -520,14 +516,9 @@ function StrWord(const S: AnsiString; var Index: SizeInt; out Word: AnsiString):
 function StrWord(var S: PAnsiChar; out Word: AnsiString): Boolean; overload;
 function StrIdent(const S: AnsiString; var Index: SizeInt; out Ident: AnsiString): Boolean; overload;
 function StrIdent(var S: PAnsiChar; out Ident: AnsiString): Boolean; overload;
-function StrToFloatSafe(const S: AnsiString): Float;
-function StrToIntSafe(const S: AnsiString): Integer;
 procedure StrNormIndex(const StrLen: SizeInt; var Index: SizeInt; var Count: SizeInt); overload;
 
 function ArrayOf(List: TJclAnsiStrings): TDynStringArray; overload;
-
-function AnsiCompareNaturalStr(const S1, S2: AnsiString): SizeInt;
-function AnsiCompareNaturalText(const S1, S2: AnsiString): SizeInt;
 
 // Explicit ANSI version of former/deprecated SysUtils PAnsiChar functions
 {$IFNDEF DEPRECATED_SYSUTILS_ANSISTRINGS}
@@ -1531,21 +1522,6 @@ begin
   end;
 end;
 
-function StrConsistsofNumberChars(const S: AnsiString): Boolean;
-var
-  I: SizeInt;
-begin
-  Result := S <> '';
-  for I := 1 to Length(S) do
-  begin
-    if not CharIsNumberChar(S[I]) then
-    begin
-      Result := False;
-      Exit;
-    end;
-  end;
-end;
-
 function StrContainsChars(const S: AnsiString; Chars: TSysCharSet; CheckAll: Boolean): Boolean;
 var
   I: SizeInt;
@@ -2287,20 +2263,6 @@ begin
       else
         Result := Result + S[I];
     end;
-  end;
-end;
-
-function StrStripNonNumberChars(const S: AnsiString): AnsiString;
-var
-  I: SizeInt;
-  C: AnsiChar;
-begin
-  Result := '';
-  for I := 1 to Length(S) do
-  begin
-    C := S[I];
-    if CharIsNumberChar(C) then
-      Result := Result + C;
   end;
 end;
 
@@ -3222,21 +3184,6 @@ begin
   Result := (AnsiCharTypes[C] and C1_LOWER) <> 0;
 end;
 
-// JclSysUtils.TJclFormatSettings.GetDecimalSeparator is manually inlined in the 2 following functions
-// this fixes compiler warnings about functions not being inlined
-
-function CharIsNumberChar(const C: AnsiChar): Boolean;
-begin
-  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or (C = AnsiSignMinus) or (C = AnsiSignPlus) or
-    (Char(C) = {$IFDEF RTL220_UP}FormatSettings.DecimalSeparator{$ELSE}SysUtils.DecimalSeparator{$ENDIF});
-end;
-
-function CharIsNumber(const C: AnsiChar): Boolean;
-begin
-  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or
-    (Char(C) = {$IFDEF RTL220_UP}FormatSettings.DecimalSeparator{$ELSE}SysUtils.DecimalSeparator{$ENDIF});
-end;
-
 function CharIsPrintable(const C: AnsiChar): Boolean;
 begin
   Result := not CharIsControl(C);
@@ -3968,81 +3915,6 @@ begin
   end;
 end;
 
-function StrToFloatSafe(const S: AnsiString): Float;
-var
-  Temp: AnsiString;
-  I, J, K: SizeInt;
-  SwapSeparators, IsNegative: Boolean;
-  DecSep: AnsiChar;
-  ThouSep: AnsiChar;
-begin
-  DecSep := AnsiChar(JclFormatSettings.DecimalSeparator);
-  ThouSep := AnsiChar(JclFormatSettings.ThousandSeparator);
-  Temp := S;
-  SwapSeparators := False;
-
-  IsNegative := False;
-  J := 0;
-  for I := 1 to Length(Temp) do
-  begin
-    if Temp[I] = '-' then
-      IsNegative := not IsNegative
-    else
-    if not (Temp[I] in [' ', '(', '+']) then
-    begin
-      // if it appears prior to any digit, it has to be a decimal separator
-      SwapSeparators := Temp[I] = ThouSep;
-      J := I;
-      Break;
-    end;
-  end;
-
-  if not SwapSeparators then
-  begin
-    K := CharPos(Temp, DecSep);
-    SwapSeparators :=
-      // if it appears prior to any digit, it has to be a decimal separator
-      (K > J) and
-      // if it appears multiple times, it has to be a thousand separator
-      ((StrCharCount(Temp, DecSep) > 1) or
-      // we assume (consistent with Windows Platform SDK documentation),
-      // that thousand separators appear only to the left of the decimal
-      (K < CharPos(Temp, ThouSep)));
-  end;
-
-  if SwapSeparators then
-  begin
-    // assume a numerical string from a different locale,
-    // where DecimalSeparator and ThousandSeparator are exchanged
-    for I := 1 to Length(Temp) do
-      if Temp[I] = DecSep then
-        Temp[I] := ThouSep
-      else
-      if Temp[I] = ThouSep then
-        Temp[I] := DecSep;
-  end;
-
-  Temp := StrKeepChars(Temp, AnsiDecDigits + [DecSep]);
-
-  if Length(Temp) > 0 then
-  begin
-    if Temp[1] = DecSep then
-      Temp := '0' + Temp;
-    if Temp[Length(Temp)] = DecSep then
-      Temp := Temp + '0';
-    Result := StrToFloat(string(Temp));
-    if IsNegative then
-      Result := -Result;
-  end
-  else
-    Result := 0.0;
-end;
-
-function StrToIntSafe(const S: AnsiString): Integer;
-begin
-  Result := Trunc(StrToFloatSafe(S));
-end;
-
 procedure StrNormIndex(const StrLen: SizeInt; var Index: SizeInt; var Count: SizeInt); overload;
 begin
   Index := Max(1, Min(Index, StrLen + 1));
@@ -4062,131 +3934,6 @@ begin
   else
     Result := nil;
 end;
-
-function AnsiCompareNatural(const S1, S2: AnsiString; CaseInsensitive: Boolean): SizeInt;
-var
-  Cur1, Len1,
-  Cur2, Len2: SizeInt;
-
-  procedure NumberCompare;
-  var
-    IsReallyNumber: Boolean;
-    FirstDiffBreaks: Boolean;
-    Val1, Val2: SizeInt;
-  begin
-    Result := 0;
-    IsReallyNumber := False;
-    // count leading spaces in S1
-    while CharIsWhiteSpace(S1[Cur1]) do
-    begin
-      Dec(Result);
-      Inc(Cur1);
-    end;
-    // count leading spaces in S2 (canceling them out against the ones in S1)
-    while CharIsWhiteSpace(S2[Cur2]) do
-    begin
-      Inc(Result);
-      Inc(Cur2);
-    end;
-
-    // if spaces match, or both strings are actually followed by a numeric character, continue the checks
-    if (Result = 0) or (CharIsNumberChar(S1[Cur1])) and (CharIsNumberChar(S2[Cur2])) then
-    begin
-      // Check signed number
-      if (S1[Cur1] = '-') and (S2[Cur2] <> '-') then
-        Result := 1
-      else
-      if (S2[Cur2] = '-') and (S1[Cur1] <> '-') then
-        Result := -1
-      else
-        Result := 0;
-
-      if (S1[Cur1] = '-') or (S1[Cur1] = '+') then
-        Inc(Cur1);
-      if (S2[Cur2] = '-') or (S2[Cur2] = '+') then
-        Inc(Cur2);
-
-      FirstDiffBreaks := (S1[Cur1] = '0') or (S2[Cur2] = '0');
-      while CharIsDigit(S1[Cur1]) and CharIsDigit(S2[Cur2]) do
-      begin
-        IsReallyNumber := True;
-        Val1 := StrToInt(string(S1[Cur1]));
-        Val2 := StrToInt(string(S2[Cur2]));
-
-        if (Result = 0) and (Val1 < Val2) then
-          Result := -1
-        else
-        if (Result = 0) and (Val1 > Val2) then
-          Result := 1;
-        if FirstDiffBreaks and (Result <> 0) then
-          Break;
-        Inc(Cur1);
-        Inc(Cur2);
-      end;
-
-      if IsReallyNumber then
-      begin
-        if not FirstDiffBreaks then
-        begin
-          if CharIsDigit(S1[Cur1]) then
-            Result := 1
-          else
-          if CharIsDigit(S2[Cur2]) then
-            Result := -1;
-        end;
-      end;
-    end;
-  end;
-
-begin
-  Cur1 := 1;
-  Len1 := Length(S1);
-  Cur2 := 1;
-  Len2 := Length(S2);
-  Result := 0;
-
-  while (Result = 0) do
-  begin
-    if (Cur1 = Len1) and (Cur2 = Len2) then
-      Break
-    else
-    if (S1[Cur1] = '-') and CharIsNumberChar(S2[Cur2]) and (S2[Cur2] <> '-') then
-      Result := -1
-    else
-    if (S2[Cur2] = '-') and CharIsNumberChar(S1[Cur1]) and (S1[Cur1] <> '-') then
-      Result := 1
-    else
-    if CharIsNumberChar(S1[Cur1]) and CharIsNumberChar(S2[Cur2]) then
-      NumberCompare
-    else
-    if (Cur1 = Len1) and (Cur2 < Len2) then
-      Result := -1
-    else
-    if (Cur1 < Len1) and (Cur2 = Len2) then
-      Result := 1
-    else
-    begin
-      Result := StrCompare(S1,S2);
-      if CaseInsensitive then
-        Result := AnsiStrLICompA(PAnsiChar(@S1[Cur1]), PAnsiChar(@S2[Cur2]), 1)
-      else
-        Result := AnsiStrLCompA(PAnsiChar(@S1[Cur1]), PAnsiChar(@S2[Cur2]), 1);
-      Inc(Cur1);
-      Inc(Cur2);
-    end;
-  end;
-end;
-
-function AnsiCompareNaturalStr(const S1, S2: AnsiString): SizeInt;
-begin
-  Result := AnsiCompareNatural(S1, S2, False);
-end;
-
-function AnsiCompareNaturalText(const S1, S2: AnsiString): SizeInt;
-begin
-  Result := AnsiCompareNatural(S1, S2, True);
-end;
-
 
 function StrNewA(const Str: PAnsiChar): PAnsiChar;
 begin
