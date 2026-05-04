@@ -60,9 +60,6 @@ uses
   Classes, SysUtils, Contnrs,
   {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclFileUtils, JclPeImage,
-  {$IFDEF BORLAND}
-  JclTD32,
-  {$ENDIF BORLAND}
   JclSynch;
 
 // Diagnostics
@@ -535,19 +532,6 @@ type
     function GetLocationInfo(const Addr: Pointer; out Info: TJclLocationInfo): Boolean; override;
     function GetAddress(const UnitName, ProcName: string): Pointer; override;
   end;
-
-  {$IFDEF BORLAND}
-  TJclDebugInfoTD32 = class(TJclDebugInfoSource)
-  private
-    FImage: TJclPeBorTD32Image;
-  public
-    destructor Destroy; override;
-    function InitializeSource: Boolean; override;
-    procedure GenerateUnmangledNames;
-    function GetLocationInfo(const Addr: Pointer; out Info: TJclLocationInfo): Boolean; override;
-    function GetAddress(const UnitName, ProcName: string): Pointer; override;
-  end;
-  {$ENDIF BORLAND}
 
   TJclDebugInfoSymbols = class(TJclDebugInfoSource)
   public
@@ -3938,9 +3922,6 @@ begin
     {$IFNDEF DEBUG_NO_BINARY}
     InfoSourceClassList.Add(Pointer(TJclDebugInfoBinary));
     {$ENDIF !DEBUG_NO_BINARY}
-    {$IFNDEF DEBUG_NO_TD32}
-    InfoSourceClassList.Add(Pointer(TJclDebugInfoTD32));
-    {$ENDIF !DEBUG_NO_TD32}
     {$IFNDEF DEBUG_NO_MAP}
     InfoSourceClassList.Add(Pointer(TJclDebugInfoMap));
     {$ENDIF !DEBUG_NO_MAP}
@@ -4271,63 +4252,6 @@ begin
   FImage.AttachLoadedModule(FModule);
   Result := FImage.StatusOK and (FImage.ExportList.Count > 0);
 end;
-
-{$IFDEF BORLAND}
-
-//=== { TJclDebugInfoTD32 } ==================================================
-
-destructor TJclDebugInfoTD32.Destroy;
-begin
-  FreeAndNil(FImage);
-  inherited Destroy;
-end;
-
-function TJclDebugInfoTD32.GetLocationInfo(const Addr: Pointer; out Info: TJclLocationInfo): Boolean;
-var
-  VA: DWORD;
-begin
-  VA := VAFromAddr(Addr);
-  Info.UnitName := FImage.TD32Scanner.ModuleNameFromAddr(VA);
-  Result := Info.UnitName <> '';
-  if Result then
-    with Info do
-    begin
-      Address := Addr;
-      ProcedureName := FImage.TD32Scanner.ProcNameFromAddr(VA, OffsetFromProcName);
-      LineNumber := FImage.TD32Scanner.LineNumberFromAddr(VA, OffsetFromLineNumber);
-      SourceName := FImage.TD32Scanner.SourceNameFromAddr(VA);
-      DebugInfo := Self;
-      BinaryFileName := FileName;
-    end;
-end;
-
-function TJclDebugInfoTD32.GetAddress(const UnitName, ProcName: string): Pointer;
-var
-  VA: DWORD;
-begin
-  Result := nil;
-  VA := FImage.TD32Scanner.VAFromUnitAndProcName(UnitName, ProcName);
-  if VA <> 0 then
-    Result := AddrFromVA(VA);
-end;
-
-function TJclDebugInfoTD32.InitializeSource: Boolean;
-begin
-  FImage := TJclPeBorTD32Image.Create(True);
-  try
-    FImage.AttachLoadedModule(Module);
-    Result := FImage.IsTD32DebugPresent;
-  except
-    Result := False;
-  end;
-end;
-
-procedure TJclDebugInfoTD32.GenerateUnmangledNames;
-begin
-  FImage.TD32Scanner.GenerateUnmangledNames;
-end;
-
-{$ENDIF BORLAND}
 
 //=== { TJclDebugInfoSymbols } ===============================================
 
