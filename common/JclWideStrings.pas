@@ -521,116 +521,17 @@ function StrICompW(const Str1, Str2: PWideChar): SizeInt;
 // Compares Str1 to Str2 without case sensitivity.
 // See also comments in StrCompW, but keep in mind that case folding might result in
 // one-to-many mappings which must be considered here.
-{$IFDEF UNICODE_RTL_DATABASE}
 begin
    Result := AnsiStrIComp(PChar(string(Str1)), PChar(string(Str2)));
 end;
-{$ELSE ~UNICODE_RTL_DATABASE}
-var
-  C1, C2: Word;
-  S1, S2: PWideChar;
-  Run1, Run2: PWideChar;
-  Folded1, Folded2: WideString;
-begin
-  // Because of size changes of the string when doing case folding
-  // it is unavoidable to convert both strings completely in advance.
-  S1 := Str1;
-  S2 := Str2;
-  Folded1 := '';
-  while S1^ <> #0 do
-  begin
-    Folded1 := Folded1 + WideCaseFolding(S1^);
-    Inc(S1);
-  end;
-
-  Folded2 := '';
-  while S2^ <> #0 do
-  begin
-    Folded2 := Folded2 + WideCaseFolding(S2^);
-    Inc(S2);
-  end;
-
-  Run1 := PWideChar(Folded1);
-  Run2 := PWideChar(Folded2);
-  repeat
-    C1 := Word(Run1^);
-    C1 := Word(C1 or UTF16Fixup[C1 shr 11]);
-    C2 := Word(Run2^);
-    C2 := Word(C2 or UTF16Fixup[C2 shr 11]);
-
-    // now C1 and C2 are in UTF-32-compatible order
-    Result := SizeInt(C1) - SizeInt(C2);
-    if(Result <> 0) or (C1 = 0) or (C2 = 0) then
-      Break;
-    Inc(Run1);
-    Inc(Run2);
-  until False;
-
-  // If the strings have different lengths but the comparation returned equity so far
-  // then adjust the result so that the longer string is marked as the larger one.
-  if Result = 0 then
-    Result := (Run1 - PWideChar(Folded1)) - (Run2 - PWideChar(Folded2));
-end;
-{$ENDIF ~UNICODE_RTL_DATABASE}
 {$ENDIF MSWINDOWS}
 
 function StrLICompW(const Str1, Str2: PWideChar; MaxLen: SizeInt): SizeInt;
 // compares strings up to MaxLen code points
 // see also StrICompW
-{$IFDEF UNICODE_RTL_DATABASE}
 begin
    Result := StrLICompW2(Str1, Str2, MaxLen)
 end;
-{$ELSE UNICODE_RTL_DATABASE}
-var
-  S1, S2: PWideChar;
-  C1, C2: Word;
-  Run1, Run2: PWideChar;
-  Folded1, Folded2: WideString;
-begin
-  if MaxLen > 0 then
-  begin
-    // Because of size changes of the string when doing case folding
-    // it is unavoidable to convert both strings completely in advance.
-    S1 := Str1;
-    S2 := Str2;
-    Folded1 := '';
-    while S1^ <> #0 do
-    begin
-      Folded1 := Folded1 + WideCaseFolding(S1^);
-      Inc(S1);
-    end;
-
-    Folded2 := '';
-    while S2^ <> #0 do
-    begin
-      Folded2 := Folded2 + WideCaseFolding(S2^);
-      Inc(S2);
-    end;
-
-    Run1 := PWideChar(Folded1);
-    Run2 := PWideChar(Folded2);
-
-    repeat
-      C1 := Word(Run1^);
-      C1 := Word(C1 or UTF16Fixup[C1 shr 11]);
-      C2 := Word(Run2^);
-      C2 := Word(C2 or UTF16Fixup[C2 shr 11]);
-
-      // now C1 and C2 are in UTF-32-compatible order
-      { TODO : surrogates take up 2 words and are counted twice here, count them only once }
-      Result := SizeInt(C1) - SizeInt(C2);
-      Dec(MaxLen);
-      if(Result <> 0) or (C1 = 0) or (C2 = 0) or (MaxLen = 0) then
-        Break;
-      Inc(Run1);
-      Inc(Run2);
-    until False;
-  end
-  else
-    Result := 0;
-end;
-{$ENDIF UNICODE_RTL_DATABASE}
 
 function StrLICompW2(const Str1, Str2: PWideChar; MaxLen: SizeInt): SizeInt;
 var

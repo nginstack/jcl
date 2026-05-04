@@ -109,16 +109,9 @@
 
 // Unicode options
 // use RTL Character Database rather than JCL one, less accurate but reduce executable size
-{.$DEFINE UNICODE_RTL_DATABASE}
 
 // insert a replacement character if sequence is corrupted rather than raising an exception
 {.$DEFINE UNICODE_SILENT_FAILURE}
-
-// defines resource compression (uncompressed, compressed with ZLib, compressed with BZip2), mutually exclusive
-{$DEFINE UNICODE_RAW_DATA} // default
-{.$DEFINE UNICODE_ZLIB_DATA}
-{.$DEFINE UNICODE_BZIP2_DATA}
-
 
 // container options
 // define mapping of TJclStr* containers to TJclAnsiStr* or TJclWideStr* (mutually exclusive)

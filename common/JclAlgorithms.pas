@@ -518,38 +518,6 @@ procedure Sort(const AList: IJclPtrList; First, Last: Integer; AComparator: TPtr
 procedure Sort(const AList: IJclList; First, Last: Integer; AComparator: TCompare); overload;
 
 
-{$IFDEF SUPPORTS_GENERICS}
-//DOM-IGNORE-BEGIN
-
-type
-  // cannot implement generic global functions
-  TJclAlgorithms<T> = class
-  private
-    //FSortProc: TSortProc;
-  public
-    class procedure Iterate(const First: IJclIterator<T>; Count: Integer; F: TIterateProcedure<T>);
-    class procedure Apply(const First: IJclIterator<T>; Count: Integer; F: TApplyFunction<T>);
-    class function Find(const First: IJclIterator<T>; Count: Integer; const AItem: T;
-      AComparator: TCompare<T>): IJclIterator<T>; overload;
-    class function Find(const First: IJclIterator<T>; Count: Integer; const AItem: T;
-      AEqualityComparator: TEqualityCompare<T>): IJclIterator<T>; overload;
-    class function CountObject(const First: IJclIterator<T>; Count: Integer;
-      const AItem: T; AComparator: TCompare<T>): Integer; overload;
-    class function CountObject(const First: IJclIterator<T>; Count: Integer;
-      const AItem: T; AEqualityComparator: TEqualityCompare<T>): Integer; overload;
-    class procedure Copy(const First: IJclIterator<T>; Count: Integer;
-      const Output: IJclIterator<T>);
-    class procedure Generate(const List: IJclList<T>; Count: Integer; const AItem: T);
-    class procedure Fill(const First: IJclIterator<T>; Count: Integer; const AItem: T);
-    class procedure Reverse(const First, Last: IJclIterator<T>);
-    class procedure QuickSort(const AList: IJclList<T>; L, R: Integer; AComparator: TCompare<T>);
-    class procedure Sort(const AList: IJclList<T>; First, Last: Integer; AComparator: TCompare<T>);
-    //class property SortProc: TSortProc<T> read FSortProc write FSortProc;
-  end;
-
-//DOM-IGNORE-END
-{$ENDIF SUPPORTS_GENERICS}
-
 const
   // table of byte permutations without inner loop
   BytePermTable: array [Byte] of Byte =
@@ -573,29 +541,14 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNITSCOPE}
   {$IFDEF COMPILER11_UP}
   Winapi.Windows,
   {$ENDIF COMPILER11_UP}
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   System.AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
-  {$IFDEF UNICODE_RTL_DATABASE}
   System.Character,
-  {$ENDIF UNICODE_RTL_DATABASE}
   System.SysUtils,
-  {$ELSE ~HAS_UNITSCOPE}
-  {$IFDEF COMPILER11_UP}
-  Windows,
-  {$ENDIF COMPILER11_UP}
-  {$IFDEF HAS_UNIT_ANSISTRINGS}
-  AnsiStrings,
-  {$ENDIF HAS_UNIT_ANSISTRINGS}
-  {$IFDEF UNICODE_RTL_DATABASE}
-  Character,
-  {$ENDIF UNICODE_RTL_DATABASE}
-  SysUtils,
-  {$ENDIF ~HAS_UNITSCOPE}
   JclAnsiStrings, JclStringConversions, JclUnicode;
 
 function IntfSimpleCompare(const Obj1, Obj2: IInterface): Integer;
@@ -1001,19 +954,11 @@ begin
   IntegerHash.H3 := 2;
   IntegerHash.H4 := 3;
   I := 1;
-  {$IFDEF UNICODE_RTL_DATABASE}
   SetLength(CA, 1);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  SetLength(CA, 0);
-  {$ENDIF ~UNICODE_RTL_DATABASE}
   while I < Length(AString) do
   begin
     C.C := UTF8GetNextChar(AString, I);
-    {$IFDEF UNICODE_RTL_DATABASE}
     CA[0] := Ord(TCharacter.ToLower(Chr(C.C)));
-    {$ELSE ~UNICODE_RTL_DATABASE}
-    CA := UnicodeCaseFold(C.C);
-    {$ENDIF ~UNICODE_RTL_DATABASE}
     for J := Low(CA) to High(CA) do
     begin
       C.C := CA[J];
@@ -1064,20 +1009,12 @@ begin
   IntegerHash.H2 := 1;
   IntegerHash.H3 := 2;
   IntegerHash.H4 := 3;
-  {$IFDEF UNICODE_RTL_DATABASE}
   SetLength(CA, 1);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  SetLength(CA, 0);
-  {$ENDIF ~UNICODE_RTL_DATABASE}
   I := 1;
   while I < Length(AString) do
   begin
     C.C := UTF16GetNextChar(AString, I);
-    {$IFDEF UNICODE_RTL_DATABASE}
     CA[0] := Ord(TCharacter.ToLower(Chr(C.C)));
-    {$ELSE ~UNICODE_RTL_DATABASE}
-    CA := UnicodeCaseFold(C.C);
-    {$ENDIF ~UNICODE_RTL_DATABASE}
     for J := Low(CA) to High(CA) do
     begin
       C.C := CA[J];
@@ -1129,20 +1066,12 @@ begin
   IntegerHash.H2 := 1;
   IntegerHash.H3 := 2;
   IntegerHash.H4 := 3;
-  {$IFDEF UNICODE_RTL_DATABASE}
   SetLength(CA, 1);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  SetLength(CA, 0);
-  {$ENDIF ~UNICODE_RTL_DATABASE}
   I := 1;
   while I < Length(AString) do
   begin
     C.C := UTF16GetNextChar(AString, I);
-    {$IFDEF UNICODE_RTL_DATABASE}
     CA[0] := Ord(TCharacter.ToLower(Chr(C.C)));
-    {$ELSE ~UNICODE_RTL_DATABASE}
-    CA := UnicodeCaseFold(C.C);
-    {$ENDIF ~UNICODE_RTL_DATABASE}
     for J := Low(CA) to High(CA) do
     begin
       C.C := CA[J];
@@ -4109,199 +4038,5 @@ procedure Sort(const AList: IJclList; First, Last: Integer; AComparator: TCompar
 begin
   SortProc(AList, First, Last, AComparator);
 end;
-
-{$IFDEF SUPPORTS_GENERICS}
-//DOM-IGNORE-BEGIN
-
-class procedure TJclAlgorithms<T>.Iterate(const First: IJclIterator<T>; Count: Integer; F: TIterateProcedure<T>);
-var
-  I: Integer;
-begin
-  for I := Count - 1 downto 0 do
-    if First.HasNext then
-      F(First.Next)
-    else
-      Break;
-end;
-
-class procedure TJclAlgorithms<T>.Apply(const First: IJclIterator<T>; Count: Integer; F: TApplyFunction<T>);
-var
-  I: Integer;
-begin
-  for I := Count - 1 downto 0 do
-    if First.HasNext then
-      First.SetItem(F(First.Next))
-    else
-      Break;
-end;
-
-class function TJclAlgorithms<T>.Find(const First: IJclIterator<T>; Count: Integer;
-  const AItem: T; AComparator: TCompare<T>): IJclIterator<T>;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := Count - 1 downto 0 do
-    if First.HasNext then
-    begin
-      if AComparator(First.Next, AItem) = 0 then
-      begin
-        Result := First;
-        Break;
-      end;
-    end
-    else
-      Break;
-end;
-
-class function TJclAlgorithms<T>.Find(const First: IJclIterator<T>; Count: Integer;
-  const AItem: T; AEqualityComparator: TEqualityCompare<T>): IJclIterator<T>;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := Count - 1 downto 0 do
-    if First.HasNext then
-    begin
-      if AEqualityComparator(First.Next, AItem) then
-      begin
-        Result := First;
-        Break;
-      end;
-    end
-    else
-      Break;
-end;
-
-class function TJclAlgorithms<T>.CountObject(const First: IJclIterator<T>; Count: Integer;
-  const AItem: T; AComparator: TCompare<T>): Integer;
-var
-  I: Integer;
-begin
-  Result := 0;
-  for I := Count - 1 downto 0 do
-    if First.HasNext then
-      Inc(Result, Ord(AComparator(First.Next, AItem) = 0))
-    else
-      Break;
-end;
-
-class function TJclAlgorithms<T>.CountObject(const First: IJclIterator<T>; Count: Integer;
-  const AItem: T; AEqualityComparator: TEqualityCompare<T>): Integer;
-var
-  I: Integer;
-begin
-  Result := 0;
-  for I := Count - 1 downto 0 do
-    if First.HasNext then
-      Inc(Result, Ord(AEqualityComparator(First.Next, AItem)))
-    else
-      Break;
-end;
-
-class procedure TJclAlgorithms<T>.Copy(const First: IJclIterator<T>; Count: Integer;
-  const Output: IJclIterator<T>);
-var
-  I: Integer;
-begin
-  for I := Count - 1 downto 0 do
-    if Output.HasNext and First.HasNext then
-    begin
-      Output.Next;
-      Output.SetItem(First.Next);
-    end
-    else
-      Break;
-end;
-
-class procedure TJclAlgorithms<T>.Generate(const List: IJclList<T>; Count: Integer;
-  const AItem: T);
-var
-  I: Integer;
-begin
-  List.Clear;
-  for I := 0 to Count - 1 do
-    List.Add(AItem);
-end;
-
-class procedure TJclAlgorithms<T>.Fill(const First: IJclIterator<T>; Count: Integer;
-  const AItem: T);
-var
-  I: Integer;
-begin
-  for I := Count - 1 downto 0 do
-    if First.HasNext then
-    begin
-      First.Next;
-      First.SetItem(AItem);
-    end
-    else
-      Break;
-end;
-
-class procedure TJclAlgorithms<T>.Reverse(const First, Last: IJclIterator<T>);
-var
-  Obj: T;
-begin
-  if not First.HasNext then
-    Exit;
-  if not Last.HasPrevious then
-    Exit;
-  while First.NextIndex < Last.PreviousIndex do
-  begin
-    Obj := First.Next;
-    Last.Previous;
-    First.SetItem(Last.GetItem);
-    Last.SetItem(Obj);
-  end;
-end;
-
-class procedure TJclAlgorithms<T>.QuickSort(const AList: IJclList<T>; L, R: Integer;
-  AComparator: TCompare<T>);
-var
-  I, J, P: Integer;
-  Obj: T;
-begin
-  repeat
-    I := L;
-    J := R;
-    P := (L + R) shr 1;
-    repeat
-      Obj := AList.GetItem(P);
-      while AComparator(AList.GetItem(I), Obj) < 0 do
-        Inc(I);
-      while AComparator(AList.GetItem(J), Obj) > 0 do
-        Dec(J);
-      if I <= J then
-      begin
-        if I <> J then
-        begin
-          Obj := AList.GetItem(I);
-          AList.SetItem(I, AList.GetItem(J));
-          AList.SetItem(J, Obj);
-        end;
-        if P = I then
-          P := J
-        else
-        if P = J then
-          P := I;
-        Inc(I);
-        Dec(J);
-      end;
-    until I > J;
-    if L < J then
-      TJclAlgorithms<T>.QuickSort(AList, L, J, AComparator);
-    L := I;
-  until I >= R;
-end;
-
-class procedure TJclAlgorithms<T>.Sort(const AList: IJclList<T>; First, Last: Integer;
-  AComparator: TCompare<T>);
-begin
-  TJclAlgorithms<T>.QuickSort(AList, First, Last, AComparator);
-end;
-
-//DOM-IGNORE-END
-{$ENDIF SUPPORTS_GENERICS}
 
 end.

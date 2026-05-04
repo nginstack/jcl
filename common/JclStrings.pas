@@ -67,17 +67,13 @@ uses
   {$IFDEF MSWINDOWS}
   Winapi.Windows,
   {$ENDIF MSWINDOWS}
-  {$IFDEF UNICODE_RTL_DATABASE}
   System.Character,
-  {$ENDIF UNICODE_RTL_DATABASE}
   System.Classes, System.SysUtils,
   {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
-  {$IFDEF UNICODE_RTL_DATABASE}
   Character,
-  {$ENDIF UNICODE_RTL_DATABASE}
   Classes, SysUtils,
   {$ENDIF ~HAS_UNITSCOPE}
   JclAnsiStrings,
@@ -173,7 +169,6 @@ function StrIsAlphaNum(const S: string): Boolean;
 function StrIsAlphaNumUnderscore(const S: string): Boolean;
 function StrContainsChars(const S: string; const Chars: TCharValidator; CheckAll: Boolean): Boolean; overload;
 function StrContainsChars(const S: string; const Chars: array of Char; CheckAll: Boolean): Boolean; overload;
-function StrConsistsOfNumberChars(const S: string): Boolean;
 function StrIsDigit(const S: string): Boolean;
 function StrIsSubset(const S: string; const ValidChars: TCharValidator): Boolean; overload;
 function StrIsSubset(const S: string; const ValidChars: array of Char): Boolean; overload;
@@ -225,7 +220,6 @@ procedure StrSkipChars(const S: string; var Index: SizeInt; const Chars: array o
 function StrSmartCase(const S: string; const Delimiters: TCharValidator): string; overload;
 function StrSmartCase(const S: string; const Delimiters: array of Char): string; overload;
 function StrStringToEscaped(const S: string): string;
-function StrStripNonNumberChars(const S: string): string;
 function StrToHex(const Source: string): string;
 function StrTrimCharLeft(const S: string; C: Char): string;
 function StrTrimCharsLeft(const S: string; const Chars: TCharValidator): string; overload;
@@ -306,8 +300,6 @@ function CharIsDigit(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {
 function CharIsFracDigit(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsHexDigit(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsLower(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
-function CharIsNumberChar(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} {$IFDEF COMPILER16_UP} inline; {$ENDIF} {$ENDIF}
-function CharIsNumber(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} {$IFDEF COMPILER16_UP} inline; {$ENDIF} {$ENDIF}
 function CharIsPrintable(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsPunctuation(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 function CharIsReturn(const C: Char): Boolean; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
@@ -401,8 +393,6 @@ function StrWord(const S: string; var Index: SizeInt; out Word: string): Boolean
 function StrWord(var S: PChar; out Word: string): Boolean; overload;
 function StrIdent(const S: string; var Index: SizeInt; out Ident: string): Boolean; overload;
 function StrIdent(var S: PChar; out Ident: string): Boolean; overload;
-function StrToFloatSafe(const S: string): Float;
-function StrToIntSafe(const S: string): Integer;
 procedure StrNormIndex(const StrLen: SizeInt; var Index: SizeInt; var Count: SizeInt); overload;
 
 function ArrayOf(List: TStrings): TDynStringArray; overload;
@@ -602,26 +592,6 @@ procedure StrResetLength(S: TJclStringBuilder); overload;
 procedure StrResetLength(var S: UnicodeString); overload;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
-// natural comparison functions
-function CompareNaturalStr(const S1, S2: string): SizeInt;
-function CompareNaturalText(const S1, S2: string): SizeInt;
-
-{$IFNDEF UNICODE_RTL_DATABASE}
-// internal structures published to make function inlining working
-const
-  MaxStrCharCount = Ord(High(Char)) + 1;       // # of chars in one set
-  StrLoOffset = MaxStrCharCount * 0;       // offset to lower case chars
-  StrUpOffset = MaxStrCharCount * 1;       // offset to upper case chars
-  StrReOffset = MaxStrCharCount * 2;       // offset to reverse case chars
-  StrCaseMapSize = MaxStrCharCount * 3;       // # of chars is a table
-
-var
-  StrCaseMap: array [0..StrCaseMapSize - 1] of Char; // case mappings
-  StrCaseMapReady: Boolean = False;         // true if case map exists
-  StrCharTypes: array [Char] of Word;
-{$ENDIF ~UNICODE_RTL_DATABASE}
-
-
 implementation
 
 uses
@@ -657,126 +627,6 @@ type
     Length: SizeInt;
   end;
 {$ENDIF ~DCC}
-
-{$IFNDEF UNICODE_RTL_DATABASE}
-procedure LoadCharTypes;
-var
-  CurrChar: Char;
-  CurrType: Word;
-begin
-  for CurrChar := Low(CurrChar) to High(CurrChar) do
-  begin
-    {$IFDEF MSWINDOWS}
-    CurrType := 0;
-    GetStringTypeEx(LOCALE_USER_DEFAULT, CT_CTYPE1, @CurrChar, 1, CurrType);
-    {$DEFINE CHAR_TYPES_INITIALIZED}
-    {$ENDIF MSWINDOWS}
-    {$IFDEF LINUX}
-    CurrType := 0;
-    if isupper(Byte(CurrChar)) <> 0 then
-      CurrType := CurrType or C1_UPPER;
-    if islower(Byte(CurrChar)) <> 0 then
-      CurrType := CurrType or C1_LOWER;
-    if isdigit(Byte(CurrChar)) <> 0 then
-      CurrType := CurrType or C1_DIGIT;
-    if isspace(Byte(CurrChar)) <> 0 then
-      CurrType := CurrType or C1_SPACE;
-    if ispunct(Byte(CurrChar)) <> 0 then
-      CurrType := CurrType or C1_PUNCT;
-    if iscntrl(Byte(CurrChar)) <> 0 then
-      CurrType := CurrType or C1_CNTRL;
-    if isblank(Byte(CurrChar)) <> 0 then
-      CurrType := CurrType or C1_BLANK;
-    if isxdigit(Byte(CurrChar)) <> 0 then
-      CurrType := CurrType or C1_XDIGIT;
-    if isalpha(Byte(CurrChar)) <> 0 then
-      CurrType := CurrType or C1_ALPHA;
-    {$DEFINE CHAR_TYPES_INITIALIZED}
-    {$ENDIF LINUX}
-    StrCharTypes[CurrChar] := CurrType;
-    {$IFNDEF CHAR_TYPES_INITIALIZED}
-    Implement case map initialization here
-    {$ENDIF ~CHAR_TYPES_INITIALIZED}
-  end;
-end;
-
-procedure LoadCaseMap;
-var
-  CurrChar, UpCaseChar, LoCaseChar, ReCaseChar: Char;
-begin
-  if not StrCaseMapReady then
-  begin
-    for CurrChar := Low(Char) to High(Char) do
-    begin
-      {$IFDEF MSWINDOWS}
-      LoCaseChar := CurrChar;
-      UpCaseChar := CurrChar;
-      {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.CharLowerBuff(@LoCaseChar, 1);
-      {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.CharUpperBuff(@UpCaseChar, 1);
-      {$DEFINE CASE_MAP_INITIALIZED}
-      {$ENDIF MSWINDOWS}
-      {$IFDEF LINUX}
-      LoCaseChar := Char(tolower(Byte(CurrChar)));
-      UpCaseChar := Char(toupper(Byte(CurrChar)));
-      {$DEFINE CASE_MAP_INITIALIZED}
-      {$ENDIF LINUX}
-      {$IFNDEF CASE_MAP_INITIALIZED}
-      Implement case map initialization here
-      {$ENDIF ~CASE_MAP_INITIALIZED}
-      if CharIsUpper(CurrChar) then
-        ReCaseChar := LoCaseChar
-      else
-      if CharIsLower(CurrChar) then
-        ReCaseChar := UpCaseChar
-      else
-        ReCaseChar := CurrChar;
-      StrCaseMap[Ord(CurrChar) + StrLoOffset] := LoCaseChar;
-      StrCaseMap[Ord(CurrChar) + StrUpOffset] := UpCaseChar;
-      StrCaseMap[Ord(CurrChar) + StrReOffset] := ReCaseChar;
-    end;
-    StrCaseMapReady := True;
-  end;
-end;
-
-// Uppercases or Lowercases a give string depending on the
-// passed offset. (UpOffset or LoOffset)
-
-procedure StrCase(var Str: string; const Offset: SizeInt);
-var
-  P: PChar;
-  I, L: SizeInt;
-begin
-  L := Length(Str);
-  if L > 0 then
-  begin
-    UniqueString(Str);
-    P := PChar(Str);
-    for I := 1 to L do
-    begin
-      P^ := StrCaseMap[Offset + Ord(P^)];
-      Inc(P);
-    end;
-  end;
-end;
-
-// Internal utility function
-// Uppercases or Lowercases a give null terminated string depending on the
-// passed offset. (UpOffset or LoOffset)
-
-procedure StrCaseBuff(S: PChar; const Offset: SizeInt);
-var
-  C: Char;
-begin
-  if S <> nil then
-  begin
-    repeat
-      C := S^;
-      S^ := StrCaseMap[Offset + Ord(C)];
-      Inc(S);
-    until C = #0;
-  end;
-end;
-{$ENDIF ~UNICODE_RTL_DATABASE}
 
 function StrEndW(Str: PWideChar): PWideChar;
 begin
@@ -847,21 +697,6 @@ begin
   for I := 1 to Length(S) do
   begin
     if not CharIsAlphaNum(S[I]) then
-    begin
-      Result := False;
-      Exit;
-    end;
-  end;
-end;
-
-function StrConsistsofNumberChars(const S: string): Boolean;
-var
-  I: SizeInt;
-begin
-  Result := S <> '';
-  for I := 1 to Length(S) do
-  begin
-    if not CharIsNumberChar(S[I]) then
     begin
       Result := False;
       Exit;
@@ -1203,7 +1038,6 @@ begin
 end;
 
 procedure StrLowerInPlace(var S: string);
-{$IFDEF UNICODE_RTL_DATABASE}
 var
   P: PChar;
   I, L: SizeInt;
@@ -1220,15 +1054,9 @@ begin
     end;
   end;
 end;
-{$ELSE ~UNICODE_RTL_DATABASE}
-begin
-  StrCase(S, StrLoOffset);
-end;
-{$ENDIF ~UNICODE_RTL_DATABASE}
 
 procedure StrLowerBuff(S: PChar);
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   if S <> nil then
   begin
     repeat
@@ -1236,9 +1064,6 @@ begin
       Inc(S);
     until S^ = #0;
   end;
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  StrCaseBuff(S, StrLoOffset);
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 procedure StrMove(var Dest: string; const Source: string;
@@ -1817,20 +1642,6 @@ begin
   end;
 end;
 
-function StrStripNonNumberChars(const S: string): string;
-var
-  I: SizeInt;
-  C: Char;
-begin
-  Result := '';
-  for I := 1 to Length(S) do
-  begin
-    C := S[I];
-    if CharIsNumberChar(C) then
-      Result := Result + C;
-  end;
-end;
-
 function StrToHex(const Source: string): string;
 var
   Index: SizeInt;
@@ -1959,7 +1770,6 @@ begin
 end;
 
 procedure StrUpperInPlace(var S: string);
-{$IFDEF UNICODE_RTL_DATABASE}
 var
   P: PChar;
   I, L: SizeInt;
@@ -1976,15 +1786,9 @@ begin
     end;
   end;
 end;
-{$ELSE ~UNICODE_RTL_DATABASE}
-begin
-  StrCase(S, StrUpOffset);
-end;
-{$ENDIF ~UNICODE_RTL_DATABASE}
 
 procedure StrUpperBuff(S: PChar);
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   if S <> nil then
   begin
     repeat
@@ -1992,9 +1796,6 @@ begin
       Inc(S);
     until S^ = #0;
   end;
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  StrCaseBuff(S, StrUpOffset);
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 //=== String Management ======================================================
@@ -2796,42 +2597,25 @@ begin
     (CharIsAlpha(C1) and CharIsAlpha(C2) and (CharLower(C1) = CharLower(C2)));
 end;
 
-
 function CharIsAlpha(const C: Char): Boolean;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.IsLetter(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := (StrCharTypes[C] and C1_ALPHA) <> 0;
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharIsAlphaNum(const C: Char): Boolean;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.IsLetterOrDigit(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := ((StrCharTypes[C] and C1_ALPHA) <> 0) or ((StrCharTypes[C] and C1_DIGIT) <> 0);
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharIsBlank(const C: Char): Boolean;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   //http://blogs.msdn.com/b/michkap/archive/2007/06/11/3230072.aspx
   Result := (C = ' ') or (C = #$0009) or (C = #$00A0) or (C = #$3000);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := ((StrCharTypes[C] and C1_BLANK) <> 0);
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharIsControl(const C: Char): Boolean;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.IsControl(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := (StrCharTypes[C] and C1_CNTRL) <> 0;
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharIsDelete(const C: Char): Boolean;
@@ -2841,11 +2625,7 @@ end;
 
 function CharIsDigit(const C: Char): Boolean;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.IsDigit(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := (StrCharTypes[C] and C1_DIGIT) <> 0;
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharIsFracDigit(const C: Char): Boolean;
@@ -2866,21 +2646,7 @@ end;
 
 function CharIsLower(const C: Char): Boolean;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.IsLower(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := (StrCharTypes[C] and C1_LOWER) <> 0;
-  {$ENDIF ~UNICODE_RTL_DATABASE}
-end;
-
-function CharIsNumberChar(const C: Char): Boolean;
-begin
-  Result := CharIsDigit(C) or (C = '+') or (C = '-') or (C = JclFormatSettings.DecimalSeparator);
-end;
-
-function CharIsNumber(const C: Char): Boolean;
-begin
-  Result := CharIsDigit(C) or (C = JclFormatSettings.DecimalSeparator);
 end;
 
 function CharIsPrintable(const C: Char): Boolean;
@@ -2890,11 +2656,7 @@ end;
 
 function CharIsPunctuation(const C: Char): Boolean;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.IsPunctuation(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := ((StrCharTypes[C] and C1_PUNCT) <> 0);
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharIsReturn(const C: Char): Boolean;
@@ -2904,20 +2666,12 @@ end;
 
 function CharIsSpace(const C: Char): Boolean;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.IsWhiteSpace(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := (StrCharTypes[C] and C1_SPACE) <> 0;
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharIsUpper(const C: Char): Boolean;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.IsUpper(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := (StrCharTypes[C] and C1_UPPER) <> 0;
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharIsValidIdentifierLetter(const C: Char): Boolean;
@@ -2965,11 +2719,7 @@ end;
 {$IFDEF MSWINDOWS}
 function CharType(const C: Char): Word;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   GetStringTypeEx(LOCALE_USER_DEFAULT, CT_CTYPE1, @C, 1, Result);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := StrCharTypes[C];
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 {$ENDIF}
 
@@ -3065,34 +2815,22 @@ end;
 
 function CharLower(const C: Char): Char;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.ToLower(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := StrCaseMap[Ord(C) + StrLoOffset];
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharToggleCase(const C: Char): Char;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   if CharIsLower(C) then
     Result := CharUpper(C)
   else if CharIsUpper(C) then
     Result := CharLower(C)
   else
     Result := C;
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := StrCaseMap[Ord(C) + StrReOffset];
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 function CharUpper(const C: Char): Char;
 begin
-  {$IFDEF UNICODE_RTL_DATABASE}
   Result := TCharacter.ToUpper(C);
-  {$ELSE ~UNICODE_RTL_DATABASE}
-  Result := StrCaseMap[Ord(C) + StrUpOffset];
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 end;
 
 //=== Character Search and Replace ===========================================
@@ -3749,81 +3487,6 @@ begin
   finally
     List.EndUpdate;
   end;
-end;
-
-function StrToFloatSafe(const S: string): Float;
-var
-  Temp: string;
-  I, J, K: SizeInt;
-  SwapSeparators, IsNegative: Boolean;
-  DecSep, ThouSep, C: Char;
-begin
-  DecSep := {$IFDEF RTL220_UP}FormatSettings.{$ENDIF}DecimalSeparator;
-  ThouSep := {$IFDEF RTL220_UP}FormatSettings.{$ENDIF}ThousandSeparator;
-  Temp := S;
-  SwapSeparators := False;
-
-  IsNegative := False;
-  J := 0;
-  for I := 1 to Length(Temp) do
-  begin
-    C := Temp[I];
-    if C = '-' then
-      IsNegative := not IsNegative
-    else
-    if (C <> ' ') and (C <> '(') and (C <> '+') then
-    begin
-        // if it appears prior to any digit, it has to be a decimal separator
-      SwapSeparators := Temp[I] = ThouSep;
-      J := I;
-      Break;
-    end;
-  end;
-
-  if not SwapSeparators then
-  begin
-    K := CharPos(Temp, DecSep);
-    SwapSeparators :=
-      // if it appears prior to any digit, it has to be a decimal separator
-      (K > J) and
-      // if it appears multiple times, it has to be a thousand separator
-      ((StrCharCount(Temp, DecSep) > 1) or
-      // we assume (consistent with Windows Platform SDK documentation),
-      // that thousand separators appear only to the left of the decimal
-      (K < CharPos(Temp, ThouSep)));
-  end;
-
-  if SwapSeparators then
-  begin
-    // assume a numerical string from a different locale,
-    // where DecimalSeparator and ThousandSeparator are exchanged
-    for I := 1 to Length(Temp) do
-      if Temp[I] = DecSep then
-        Temp[I] := ThouSep
-      else
-      if Temp[I] = ThouSep then
-        Temp[I] := DecSep;
-  end;
-
-  Temp := StrKeepChars(Temp, CharIsNumber);
-
-  if Length(Temp) > 0 then
-  begin
-    if Temp[1] = DecSep then
-      Temp := '0' + Temp;
-    if Temp[Length(Temp)] = DecSep then
-      Temp := Temp + '0';
-    Result := StrToFloat(Temp);
-    if IsNegative then
-      Result := -Result;
-  end
-  else
-    Result := 0.0;
-end;
-
-function StrToIntSafe(const S: string): Integer;
-begin
-  Result := Trunc(StrToFloatSafe(S));
 end;
 
 procedure StrNormIndex(const StrLen: SizeInt; var Index: SizeInt; var Count: SizeInt); overload;
@@ -5256,161 +4919,6 @@ constructor NullReferenceException.Create;
 begin
   CreateRes(@RsArg_NullReferenceException);
 end;
-
-function CompareNatural(const S1, S2: string; CaseInsensitive: Boolean): SizeInt;
-var
-  Cur1, Len1,
-  Cur2, Len2: SizeInt;
-
-  function IsRealNumberChar(ch: Char): Boolean;
-  begin
-    Result := ((ch >= '0') and (ch <= '9')) or (ch = '-') or (ch = '+');
-  end;
-
-  procedure NumberCompare;
-  var
-    IsReallyNumber: Boolean;
-    FirstDiffBreaks: Boolean;
-    Val1, Val2:     SizeInt;
-  begin
-    Result := 0;
-    IsReallyNumber := False;
-    // count leading spaces in S1
-    while (Cur1 <= Len1) and CharIsWhiteSpace(S1[Cur1]) do
-    begin
-      Dec(Result);
-      Inc(Cur1);
-    end;
-    // count leading spaces in S2 (canceling them out against the ones in S1)
-    while (Cur2 <= Len2) and CharIsWhiteSpace(S2[Cur2]) do
-    begin
-      Inc(Result);
-      Inc(Cur2);
-    end;
-
-    // if spaces match, or both strings are actually followed by a numeric character, continue the checks
-    if (Result = 0) or ((Cur1 <= Len1) and CharIsNumberChar(S1[Cur1]) and (Cur2 <= Len2) and CharIsNumberChar(S2[Cur2])) then
-    begin
-      // Check signed number
-      if (Cur1 <= Len1) and (S1[Cur1] = '-') and ((Cur2 > Len2) or (S2[Cur2] <> '-')) then
-        Result := 1
-      else
-      if (Cur2 <= Len2) and (S2[Cur2] = '-') and ((Cur1 > Len1) or (S1[Cur1] <> '-')) then
-        Result := -1
-      else
-        Result := 0;
-
-      if (Cur1 <= Len1) and ((S1[Cur1] = '-') or (S1[Cur1] = '+')) then
-        Inc(Cur1);
-      if (Cur2 <= Len2) and ((S2[Cur2] = '-') or (S2[Cur2] = '+')) then
-        Inc(Cur2);
-
-      FirstDiffBreaks := (Cur1 <= Len1) and (S1[Cur1] = '0') or (Cur2 <= Len2) and (S2[Cur2] = '0');
-      while (Cur1 <= Len1) and CharIsDigit(S1[Cur1]) and (Cur2 <= Len2) and CharIsDigit(S2[Cur2]) do
-      begin
-        IsReallyNumber := True;
-        Val1 := StrToInt(S1[Cur1]);
-        Val2 := StrToInt(S2[Cur2]);
-
-        if (Result = 0) and (Val1 < Val2) then
-          Result := -1
-        else
-        if (Result = 0) and (Val1 > Val2) then
-          Result := 1;
-        if FirstDiffBreaks and (Result <> 0) then
-          Break;
-        Inc(Cur1);
-        Inc(Cur2);
-      end;
-
-      if IsReallyNumber then
-      begin
-        if not FirstDiffBreaks then
-        begin
-          if (Cur1 <= Len1) and CharIsDigit(S1[Cur1]) then
-            Result := 1
-          else
-          if (Cur2 <= Len2) and CharIsDigit(S2[Cur2]) then
-            Result := -1;
-        end;
-      end;
-    end;
-  end;
-
-  procedure SetByCompareLength;
-  var
-    Remain1: SizeInt;
-    Remain2: SizeInt;
-  begin
-    // base result on relative compare length (spaces could be ignored, so even if S1 is longer than S2, they could be
-    // completely equal, or S2 could be longer)
-    Remain1 := Len1 - Cur1 + 1;
-    Remain2 := Len2 - Cur2 + 1;
-    if Remain1 < 0 then
-      Remain1 := 0;
-    if Remain2 < 0 then
-      Remain2 := 0;
-
-    if Remain1 < Remain2 then
-      Result := -1
-    else
-    if Remain1 > Remain2 then
-      Result := 1;
-  end;
-
-begin
-  Cur1 := 1;
-  Len1 := Length(S1);
-  Cur2 := 1;
-  Len2 := Length(S2);
-  Result := 0;
-
-  while (Result = 0) do
-  begin
-    if (Cur1 > Len1) or (Cur2 > Len2) then
-    begin
-      SetByCompareLength;
-      Break;
-    end
-    else
-    if (Cur1 <= Len1) and (Cur2 > Len2) then
-      Result := 1
-    else
-    if (S1[Cur1] = '-') and IsRealNumberChar(S2[Cur2]) and (S2[Cur2] <> '-') then
-      Result := -1
-    else
-    if (S2[Cur2] = '-') and IsRealNumberChar(S1[Cur1]) and (S1[Cur1] <> '-') then
-      Result := 1
-    else
-    if (IsRealNumberChar(S1[Cur1]) or CharIsWhiteSpace(S1[Cur1])) and (IsRealNumberChar(S2[Cur2]) or CharIsWhiteSpace(S2[Cur2])) then
-      NumberCompare
-    else
-    begin
-      if CaseInsensitive then
-        Result := StrLIComp(PChar(@S1[Cur1]), PChar(@S2[Cur2]), 1)
-      else
-        Result := StrLComp(PChar(@S1[Cur1]), PChar(@S2[Cur2]), 1);
-      Inc(Cur1);
-      Inc(Cur2);
-    end;
-  end;
-end;
-
-function CompareNaturalStr(const S1, S2: string): SizeInt;
-begin
-  Result := CompareNatural(S1, S2, False);
-end;
-
-function CompareNaturalText(const S1, S2: string): SizeInt;
-begin
-  Result := CompareNatural(S1, S2, True);
-end;
-
-initialization
-  {$IFNDEF UNICODE_RTL_DATABASE}
-  LoadCharTypes;  // this table first
-  LoadCaseMap;    // or this function does not work
-  {$ENDIF ~UNICODE_RTL_DATABASE}
 
 end.
 

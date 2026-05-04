@@ -59,7 +59,6 @@ function SetDisplayResolution(const XRes, YRes: DWORD): Longint;
 
 function WinExec32(Cmd: string; const CmdShow: Integer): Boolean;
 function WinExec32AndWait(Cmd: string; const CmdShow: Integer): Cardinal;
-function WinExec32AndRedirectOutput(const Cmd: string; var Output: string; RawOutput: Boolean = False): Cardinal;
 
 implementation
 
@@ -132,11 +131,6 @@ begin
     CloseHandle(ProcessInfo.hThread);
     CloseHandle(ProcessInfo.hProcess);
   end;
-end;
-
-function WinExec32AndRedirectOutput(const Cmd: string; var Output: string; RawOutput: Boolean): Cardinal;
-begin
-  Result := Execute(Cmd, Output, RawOutput);
 end;
 
 end.
