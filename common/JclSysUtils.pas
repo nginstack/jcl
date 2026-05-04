@@ -380,9 +380,6 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
-  {$IFDEF MSWINDOWS}
-  JclConsole,
-  {$ENDIF MSWINDOWS}
   {$IFDEF HAS_UNITSCOPE}
   System.Variants, System.Types, System.Contnrs,
   {$IFDEF HAS_UNIT_ANSISTRINGS}

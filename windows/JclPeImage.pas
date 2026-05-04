@@ -462,7 +462,6 @@ type
   TJclPeDebugList = class(TJclPeImageBaseList)
   private
     function GetItems(Index: TJclListSize): TImageDebugDirectory;
-    function IsTD32DebugInfo(DebugDir: PImageDebugDirectory): Boolean;
   protected
     procedure CreateList;
   public
@@ -866,34 +865,13 @@ type
 
 { Image validity }
 
-function IsValidPeFile(const FileName: TFileName): Boolean;
-
-// use PeGetNtHeaders32 for backward compatibility
-// function PeGetNtHeaders(const FileName: TFileName; out NtHeaders: TImageNtHeaders): Boolean;
-function PeGetNtHeaders32(const FileName: TFileName; out NtHeaders: TImageNtHeaders32): Boolean;
-function PeGetNtHeaders64(const FileName: TFileName; out NtHeaders: TImageNtHeaders64): Boolean;
-
 { Image modifications }
 
 function PeCreateNameHintTable(const FileName: TFileName): Boolean;
 
-// use PeRebaseImage32
-//function PeRebaseImage(const ImageName: TFileName; NewBase: DWORD = 0; TimeStamp: DWORD = 0;
-//  MaxNewSize: DWORD = 0): TJclRebaseImageInfo;
-function PeRebaseImage32(const ImageName: TFileName; NewBase: TJclAddr32 = 0; TimeStamp: DWORD = 0;
-  MaxNewSize: DWORD = 0): TJclRebaseImageInfo32;
-function PeRebaseImage64(const ImageName: TFileName; NewBase: TJclAddr64 = 0; TimeStamp: DWORD = 0;
-  MaxNewSize: DWORD = 0): TJclRebaseImageInfo64;
-
-function PeUpdateLinkerTimeStamp(const FileName: TFileName; const Time: TDateTime): Boolean;
-function PeReadLinkerTimeStamp(const FileName: TFileName): TDateTime;
-
-function PeInsertSection(const FileName: TFileName; SectionStream: TStream; SectionName: string): Boolean;
-
 { Image Checksum }
 
 function PeVerifyCheckSum(const FileName: TFileName): Boolean;
-function PeClearCheckSum(const FileName: TFileName): Boolean;
 function PeUpdateCheckSum(const FileName: TFileName): Boolean;
 
 // Various simple PE Image searching and listing routines
@@ -1098,7 +1076,7 @@ uses
   Character,
   {$ENDIF HAS_UNIT_CHARACTER}
   {$ENDIF ~HAS_UNITSCOPE}
-  JclLogic, JclResources, JclSysUtils, JclAnsiStrings, JclStrings, JclStringConversions, JclTD32;
+  JclLogic, JclResources, JclSysUtils, JclAnsiStrings, JclStrings, JclStringConversions;
 
 const
   MANIFESTExtension = '.manifest';
@@ -2991,19 +2969,10 @@ begin
   CreateList;
 end;
 
-function TJclPeDebugList.IsTD32DebugInfo(DebugDir: PImageDebugDirectory): Boolean;
-var
-  Base: Pointer;
-begin
-  Base := Image.RvaToVa(DebugDir^.AddressOfRawData);
-  Result := TJclTD32InfoParser.IsTD32DebugInfoValid(Base, DebugDir^.SizeOfData);
-end;
-
 procedure TJclPeDebugList.CreateList;
 var
   DebugImageDir: TImageDataDirectory;
   DebugDir: PImageDebugDirectory;
-  Header: PImageSectionHeader;
   FormatCount, I: Integer;
 begin
   with Image do
@@ -3013,17 +2982,8 @@ begin
     DebugImageDir := Directories[IMAGE_DIRECTORY_ENTRY_DEBUG];
     if DebugImageDir.VirtualAddress = 0 then
       Exit;
-    if GetSectionHeader(DebugSectionName, Header) and
-      (Header^.VirtualAddress = DebugImageDir.VirtualAddress) and
-      (IsTD32DebugInfo(RvaToVa(DebugImageDir.VirtualAddress))) then
-    begin
-      // TD32 debug image directory is broken...size should be in bytes, not count.
-      FormatCount := DebugImageDir.Size;
-    end
-    else
-    begin
-      FormatCount := DebugImageDir.Size div SizeOf(TImageDebugDirectory);
-    end;
+
+    FormatCount := DebugImageDir.Size div SizeOf(TImageDebugDirectory);
     DebugDir := RvaToVa(DebugImageDir.VirtualAddress);
     for I := 1 to FormatCount do
     begin
@@ -4966,84 +4926,6 @@ end;
 
 //=== PE Image miscellaneous functions =======================================
 
-function IsValidPeFile(const FileName: TFileName): Boolean;
-var
-  NtHeaders: TImageNtHeaders32;
-begin
-  Result := PeGetNtHeaders32(FileName, NtHeaders);
-end;
-
-function InternalGetNtHeaders32(const FileName: TFileName; out NtHeaders): Boolean;
-var
-  FileHandle: THandle;
-  Mapping: TJclFileMapping;
-  View: TJclFileMappingView;
-  HeadersPtr: PImageNtHeaders32;
-begin
-  Result := False;
-  ResetMemory(NtHeaders, SizeOf(TImageNtHeaders32));
-  FileHandle := FileOpen(FileName, fmOpenRead or fmShareDenyWrite);
-  if FileHandle = INVALID_HANDLE_VALUE then
-    Exit;
-  try
-    if GetSizeOfFile(FileHandle) >= SizeOf(TImageDosHeader) then
-    begin
-      Mapping := TJclFileMapping.Create(FileHandle, '', PAGE_READONLY, 0, nil);
-      try
-        View := TJclFileMappingView.Create(Mapping, FILE_MAP_READ, 0, 0);
-        HeadersPtr := PeMapImgNtHeaders32(View.Memory);
-        if HeadersPtr <> nil then
-        begin
-          Result := True;
-          TImageNtHeaders32(NtHeaders) := HeadersPtr^;
-        end;
-      finally
-        Mapping.Free;
-      end;
-    end;
-  finally
-    FileClose(FileHandle);
-  end;
-end;
-
-function PeGetNtHeaders32(const FileName: TFileName; out NtHeaders: TImageNtHeaders32): Boolean;
-begin
-  Result := InternalGetNtHeaders32(FileName, NtHeaders);
-end;
-
-function PeGetNtHeaders64(const FileName: TFileName; out NtHeaders: TImageNtHeaders64): Boolean;
-var
-  FileHandle: THandle;
-  Mapping: TJclFileMapping;
-  View: TJclFileMappingView;
-  HeadersPtr: PImageNtHeaders64;
-begin
-  Result := False;
-  ResetMemory(NtHeaders, SizeOf(NtHeaders));
-  FileHandle := FileOpen(FileName, fmOpenRead or fmShareDenyWrite);
-  if FileHandle = INVALID_HANDLE_VALUE then
-    Exit;
-  try
-    if GetSizeOfFile(FileHandle) >= SizeOf(TImageDosHeader) then
-    begin
-      Mapping := TJclFileMapping.Create(FileHandle, '', PAGE_READONLY, 0, nil);
-      try
-        View := TJclFileMappingView.Create(Mapping, FILE_MAP_READ, 0, 0);
-        HeadersPtr := PeMapImgNtHeaders64(View.Memory);
-        if HeadersPtr <> nil then
-        begin
-          Result := True;
-          NtHeaders := HeadersPtr^;
-        end;
-      finally
-        Mapping.Free;
-      end;
-    end;
-  finally
-    FileClose(FileHandle);
-  end;
-end;
-
 function PeCreateNameHintTable(const FileName: TFileName): Boolean;
 var
   PeImage, ExportsImage: TJclPeImage;
@@ -5140,300 +5022,6 @@ begin
   end;
 end;
 
-function PeRebaseImage32(const ImageName: TFileName; NewBase: TJclAddr32;
-  TimeStamp, MaxNewSize: DWORD): TJclRebaseImageInfo32;
-
-  function CalculateBaseAddress: TJclAddr32;
-  var
-    FirstChar: Char;
-    ModuleName: string;
-  begin
-    ModuleName := ExtractFileName(ImageName);
-    if Length(ModuleName) > 0 then
-      FirstChar := UpCase(ModuleName[1])
-    else
-      FirstChar := NativeNull;
-    if not CharIsUpper(FirstChar) then
-      FirstChar := 'A';
-    Result := $60000000 + (((Ord(FirstChar) - Ord('A')) div 3) * $1000000);
-  end;
-
-{$IFDEF CPU64}
-{$IFNDEF DELPHI64_TEMPORARY}
-var
-  NewIB, OldIB: QWord;
-{$ENDIF CPU64}
-{$ENDIF ~DELPHI64_TEMPORARY}
-begin
-  if NewBase = 0 then
-    NewBase := CalculateBaseAddress;
-  with Result do
-  begin
-    NewImageBase := NewBase;
-    // OF: possible loss of data
-    {$IFDEF CPU32}
-    Win32Check(ReBaseImage(PAnsiChar(AnsiString(ImageName)), nil, True, False, False, MaxNewSize,
-      OldImageSize, OldImageBase, NewImageSize, NewImageBase, TimeStamp));
-    {$ENDIF CPU32}
-    {$IFDEF CPU64}
-    {$IFDEF DELPHI64_TEMPORARY}
-    System.Error(rePlatformNotImplemented);
-    {$ELSE ~DELPHI64_TEMPORARY}
-    NewIB := NewImageBase;
-    OldIB := OldImageBase;
-    Win32Check(ReBaseImage(PAnsiChar(AnsiString(ImageName)), nil, True, False, False, MaxNewSize,
-      OldImageSize, OldIB, NewImageSize, NewIB, TimeStamp));
-    NewImageBase := NewIB;
-    OldImageBase := OldIB;
-    {$ENDIF ~DELPHI64_TEMPORARY}
-    {$ENDIF CPU64}
-  end;
-end;
-
-function PeRebaseImage64(const ImageName: TFileName; NewBase: TJclAddr64;
-  TimeStamp, MaxNewSize: DWORD): TJclRebaseImageInfo64;
-
-  function CalculateBaseAddress: TJclAddr64;
-  var
-    FirstChar: Char;
-    ModuleName: string;
-  begin
-    ModuleName := ExtractFileName(ImageName);
-    if Length(ModuleName) > 0 then
-      FirstChar := UpCase(ModuleName[1])
-    else
-      FirstChar := NativeNull;
-    if not CharIsUpper(FirstChar) then
-      FirstChar := 'A';
-    Result := $60000000 + (((Ord(FirstChar) - Ord('A')) div 3) * $1000000);
-    Result := Result shl 32;
-  end;
-
-begin
-  if NewBase = 0 then
-    NewBase := CalculateBaseAddress;
-  with Result do
-  begin
-    NewImageBase := NewBase;
-    // OF: possible loss of data
-    Win32Check(ReBaseImage64(PAnsiChar(AnsiString(ImageName)), nil, True, False, False, MaxNewSize,
-      OldImageSize, OldImageBase, NewImageSize, NewImageBase, TimeStamp));
-  end;
-end;
-
-function PeUpdateLinkerTimeStamp(const FileName: TFileName; const Time: TDateTime): Boolean;
-var
-  Mapping: TJclFileMapping;
-  View: TJclFileMappingView;
-  Headers: PImageNtHeaders32; // works with 64-bit binaries too
-                              // only the optional field differs
-begin
-  Mapping := TJclFileMapping.Create(FileName, fmOpenReadWrite, '', PAGE_READWRITE, 0, nil);
-  try
-    View := TJclFileMappingView.Create(Mapping, FILE_MAP_WRITE, 0, 0);
-    Headers := PeMapImgNtHeaders32(View.Memory);
-    Result := (Headers <> nil);
-    if Result then
-      Headers^.FileHeader.TimeDateStamp := TJclPeImage.DateTimeToStamp(Time);
-  finally
-    Mapping.Free;
-  end;
-end;
-
-function PeReadLinkerTimeStamp(const FileName: TFileName): TDateTime;
-var
-  Mapping: TJclFileMappingStream;
-  Headers: PImageNtHeaders32; // works with 64-bit binaries too
-                              // only the optional field differs
-begin
-  Mapping := TJclFileMappingStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
-  try
-    Headers := PeMapImgNtHeaders32(Mapping.Memory);
-    if Headers <> nil then
-      Result := TJclPeImage.StampToDateTime(Headers^.FileHeader.TimeDateStamp)
-    else
-      Result := -1;
-  finally
-    Mapping.Free;
-  end;
-end;
-
-{ TODO -cHelp : Author: Uwe Schuster(just a generic version of JclDebug.InsertDebugDataIntoExecutableFile) }
-function PeInsertSection(const FileName: TFileName; SectionStream: TStream; SectionName: string): Boolean;
-  procedure RoundUpToAlignment(var Value: DWORD; Alignment: DWORD);
-  begin
-    if (Value mod Alignment) <> 0 then
-      Value := ((Value div Alignment) + 1) * Alignment;
-  end;
-  function PeInsertSection32(ImageStream: TMemoryStream): Boolean;
-  var
-    NtHeaders: PImageNtHeaders32;
-    Sections, LastSection, NewSection: PImageSectionHeader;
-    VirtualAlignedSize: DWORD;
-    I, X, NeedFill: Integer;
-    SectionDataSize: Integer;
-    UTF8Name: TUTF8String;
-  begin
-    Result := True;
-    try
-      SectionDataSize := SectionStream.Size;
-      NtHeaders := PeMapImgNtHeaders32(ImageStream.Memory);
-      Assert(NtHeaders <> nil);
-      Sections := PeMapImgSections32(NtHeaders);
-      Assert(Sections <> nil);
-      // Check whether there is not a section with the name already. If so, return True (#0000069)
-      if PeMapImgFindSection32(NtHeaders, SectionName) <> nil then
-      begin
-        Result := True;
-        Exit;
-      end;
-
-      LastSection := Sections;
-      Inc(LastSection, NtHeaders^.FileHeader.NumberOfSections - 1);
-      NewSection := LastSection;
-      Inc(NewSection);
-
-      // Increase the number of sections
-      Inc(NtHeaders^.FileHeader.NumberOfSections);
-      ResetMemory(NewSection^, SizeOf(TImageSectionHeader));
-      // JCLDEBUG Virtual Address
-      NewSection^.VirtualAddress := LastSection^.VirtualAddress + LastSection^.Misc.VirtualSize;
-      RoundUpToAlignment(NewSection^.VirtualAddress, NtHeaders^.OptionalHeader.SectionAlignment);
-      // JCLDEBUG Physical Offset
-      NewSection^.PointerToRawData := LastSection^.PointerToRawData + LastSection^.SizeOfRawData;
-      RoundUpToAlignment(NewSection^.PointerToRawData, NtHeaders^.OptionalHeader.FileAlignment);
-      // JCLDEBUG Section name
-      if not TryStringToUTF8(SectionName, UTF8Name) then
-        UTF8Name := TUTF8String(SectionName);
-      StrPLCopyA(PAnsiChar(@NewSection^.Name), UTF8Name, IMAGE_SIZEOF_SHORT_NAME);
-      // JCLDEBUG Characteristics flags
-      NewSection^.Characteristics := IMAGE_SCN_MEM_READ or IMAGE_SCN_CNT_INITIALIZED_DATA;
-
-      // Size of virtual data area
-      NewSection^.Misc.VirtualSize := SectionDataSize;
-      VirtualAlignedSize := SectionDataSize;
-      RoundUpToAlignment(VirtualAlignedSize, NtHeaders^.OptionalHeader.SectionAlignment);
-      // Update Size of Image
-      Inc(NtHeaders^.OptionalHeader.SizeOfImage, VirtualAlignedSize);
-      // Raw data size
-      NewSection^.SizeOfRawData := SectionDataSize;
-      RoundUpToAlignment(NewSection^.SizeOfRawData, NtHeaders^.OptionalHeader.FileAlignment);
-      // Update Initialized data size
-      Inc(NtHeaders^.OptionalHeader.SizeOfInitializedData, NewSection^.SizeOfRawData);
-
-      // Fill data to alignment
-      NeedFill := INT_PTR(NewSection^.SizeOfRawData) - SectionDataSize;
-
-      // Note: Delphi linker seems to generate incorrect (unaligned) size of
-      // the executable when adding TD32 debug data so the position could be
-      // behind the size of the file then.
-      ImageStream.Seek(NewSection^.PointerToRawData, soBeginning);
-      ImageStream.CopyFrom(SectionStream, 0);
-      X := 0;
-      for I := 1 to NeedFill do
-        ImageStream.WriteBuffer(X, 1);
-    except
-      Result := False;
-    end;
-  end;
-  function PeInsertSection64(ImageStream: TMemoryStream): Boolean;
-  var
-    NtHeaders: PImageNtHeaders64;
-    Sections, LastSection, NewSection: PImageSectionHeader;
-    VirtualAlignedSize: DWORD;
-    I, X, NeedFill: Integer;
-    SectionDataSize: Integer;
-    UTF8Name: TUTF8String;
-  begin
-    Result := True;
-    try
-      SectionDataSize := SectionStream.Size;
-      NtHeaders := PeMapImgNtHeaders64(ImageStream.Memory);
-      Assert(NtHeaders <> nil);
-      Sections := PeMapImgSections64(NtHeaders);
-      Assert(Sections <> nil);
-      // Check whether there is not a section with the name already. If so, return True (#0000069)
-      if PeMapImgFindSection64(NtHeaders, SectionName) <> nil then
-      begin
-        Result := True;
-        Exit;
-      end;
-
-      LastSection := Sections;
-      Inc(LastSection, NtHeaders^.FileHeader.NumberOfSections - 1);
-      NewSection := LastSection;
-      Inc(NewSection);
-
-      // Increase the number of sections
-      Inc(NtHeaders^.FileHeader.NumberOfSections);
-      ResetMemory(NewSection^, SizeOf(TImageSectionHeader));
-      // JCLDEBUG Virtual Address
-      NewSection^.VirtualAddress := LastSection^.VirtualAddress + LastSection^.Misc.VirtualSize;
-      RoundUpToAlignment(NewSection^.VirtualAddress, NtHeaders^.OptionalHeader.SectionAlignment);
-      // JCLDEBUG Physical Offset
-      NewSection^.PointerToRawData := LastSection^.PointerToRawData + LastSection^.SizeOfRawData;
-      RoundUpToAlignment(NewSection^.PointerToRawData, NtHeaders^.OptionalHeader.FileAlignment);
-      // JCLDEBUG Section name
-      if not TryStringToUTF8(SectionName, UTF8Name) then
-        UTF8Name := TUTF8String(SectionName);
-      StrPLCopyA(PAnsiChar(@NewSection^.Name), UTF8Name, IMAGE_SIZEOF_SHORT_NAME);
-      // JCLDEBUG Characteristics flags
-      NewSection^.Characteristics := IMAGE_SCN_MEM_READ or IMAGE_SCN_CNT_INITIALIZED_DATA;
-
-      // Size of virtual data area
-      NewSection^.Misc.VirtualSize := SectionDataSize;
-      VirtualAlignedSize := SectionDataSize;
-      RoundUpToAlignment(VirtualAlignedSize, NtHeaders^.OptionalHeader.SectionAlignment);
-      // Update Size of Image
-      Inc(NtHeaders^.OptionalHeader.SizeOfImage, VirtualAlignedSize);
-      // Raw data size
-      NewSection^.SizeOfRawData := SectionDataSize;
-      RoundUpToAlignment(NewSection^.SizeOfRawData, NtHeaders^.OptionalHeader.FileAlignment);
-      // Update Initialized data size
-      Inc(NtHeaders^.OptionalHeader.SizeOfInitializedData, NewSection^.SizeOfRawData);
-
-      // Fill data to alignment
-      NeedFill := INT_PTR(NewSection^.SizeOfRawData) - SectionDataSize;
-
-      // Note: Delphi linker seems to generate incorrect (unaligned) size of
-      // the executable when adding TD32 debug data so the position could be
-      // behind the size of the file then.
-      ImageStream.Seek(NewSection^.PointerToRawData, soBeginning);
-      ImageStream.CopyFrom(SectionStream, 0);
-      X := 0;
-      for I := 1 to NeedFill do
-        ImageStream.WriteBuffer(X, 1);
-    except
-      Result := False;
-    end;
-  end;
-
-var
-  ImageStream: TMemoryStream;
-begin
-  Result := Assigned(SectionStream) and (SectionName <> '');
-  if not Result then
-    Exit;
-  ImageStream := TMemoryStream.Create;
-  try
-    ImageStream.LoadFromFile(FileName);
-    case PeMapImgTarget(ImageStream.Memory) of
-      taWin32:
-        Result := PeInsertSection32(ImageStream);
-      taWin64:
-        Result := PeInsertSection64(ImageStream);
-      //taUnknown:
-    else
-      Result := False;
-    end;
-
-    if Result then
-      ImageStream.SaveToFile(FileName);
-  finally
-    ImageStream.Free;
-  end;
-end;
-
 function PeVerifyCheckSum(const FileName: TFileName): Boolean;
 begin
   with CreatePeImage(FileName) do
@@ -5441,46 +5029,6 @@ begin
     Result := VerifyCheckSum;
   finally
     Free;
-  end;
-end;
-
-function PeClearCheckSum(const FileName: TFileName): Boolean;
-  function PeClearCheckSum32(ModuleAddress: Pointer): Boolean;
-  var
-    Headers: PImageNtHeaders32;
-  begin
-    Headers := PeMapImgNtHeaders32(ModuleAddress);
-    Result := (Headers <> nil);
-    if Result then
-      Headers^.OptionalHeader.CheckSum := 0;
-  end;
-  function PeClearCheckSum64(ModuleAddress: Pointer): Boolean;
-  var
-    Headers: PImageNtHeaders64;
-  begin
-    Headers := PeMapImgNtHeaders64(ModuleAddress);
-    Result := (Headers <> nil);
-    if Result then
-      Headers^.OptionalHeader.CheckSum := 0;
-  end;
-var
-  Mapping: TJclFileMapping;
-  View: TJclFileMappingView;
-begin
-  Mapping := TJclFileMapping.Create(FileName, fmOpenReadWrite, '', PAGE_READWRITE, 0, nil);
-  try
-    View := TJclFileMappingView.Create(Mapping, FILE_MAP_WRITE, 0, 0);
-    case PeMapImgTarget(View.Memory) of
-      taWin32:
-        Result := PeClearCheckSum32(View.Memory);
-      taWin64:
-        Result := PeClearCheckSum64(View.Memory);
-      //taUnknown:
-    else
-      Result := False;
-    end;
-  finally
-    Mapping.Free;
   end;
 end;
 

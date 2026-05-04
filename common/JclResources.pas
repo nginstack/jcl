@@ -957,10 +957,6 @@ resourcestring
 resourcestring
   RsComplexInvalidString = 'Failed to create a complex number from the string provided';
 
-//=== JclConsole =============================================================
-resourcestring
-  RsCannotRaiseSignal = 'Cannot raise %s signal.';
-
 //=== JclContainerIntf =======================================================
 resourcestring
   RsEOutOfBounds           = 'Out of bounds';
@@ -1689,10 +1685,6 @@ resourcestring
 
   RsInvalidMMFName = 'Invalid MMF name "%s"';
   RsInvalidMMFEmpty = 'The MMF named "%s" cannot be created empty';
-
-//=== JclTD32 ================================================================
-resourcestring
-  RsHasNotTD32Info = 'File [%s] has not TD32 debug information!';
 
 //=== JclTimeZones ===========================================================
 resourcestring
