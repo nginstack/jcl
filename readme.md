@@ -1,64 +1,60 @@
 # JCL
 
-**Versão atual:** commit f6682a0366eb3a49922e30669bb5a5139c183476 do branch **master** de 
-20/01/2026.
+**Versão atual:** commit 7332634269062e46e2f6cf0f4b2a712bf8dc39e6 do branch **master** de
+03/07/2026.
 
 Observar que a JCL em si não é compatível com o FreePascal e no passado foi criado este fork
-que foi sendo gradualmente modificado para tornar compatível. Essa abordagem tornou possível a 
-criação da versão Linux do Engine, no entanto cria dificuldades para sincronizar o repositório. 
-Abaixo estão os detalhes de como sincronizar o repositório e as principais correções que 
+que foi sendo gradualmente modificado para tornar compatível. Essa abordagem tornou possível a
+criação da versão Linux do Engine, no entanto cria dificuldades para sincronizar o repositório.
+Abaixo estão os detalhes de como sincronizar o repositório e as principais correções que
 precisam ser verificadas a fim de evitar uma regressão da compatibilidade com o Linux.
 
-O repositório https://github.com/Makhaon/jcl contém várias alterações de compatibilidade e o 
+O repositório https://github.com/Makhaon/jcl contém várias alterações de compatibilidade e o
 pull request https://github.com/project-jedi/jcl/pull/41 tenta integrar essas alterações
 no repositório do jcl. Deste repositório, aproveitamos o arquivo common/FpLibcCompatibility.pas.
 
 ### Passos para atualizar a JCL
 
 Atualmente o JCL recebe poucas atualizações, portanto a maneira mais fácil de atualizar os fontes
-é realizando um patch manual do último commit sincronizado até a versão atual do projeto. Caso o 
+é realizando um patch manual do último commit sincronizado até a versão atual do projeto. Caso o
 JCL passe por uma modificação mais significativa, devem ser realizados os passos abaixo:
 
 1. Execute o instalador do JCL (install.bat). Em cada aba associada a versão do Delphi:
+    - Desmarque a opção _Wrapper options_
+    - Desmarque a opção _Environment_
+    - Desmarque a opção _Make library units_
+    - Desmarque a opção _Packages_
+    - Desmarque a opção _Enable thread safe code_ (o Engine utiliza locks próprios para
+      sincronizar o uso das classes da JCL)
+    - Configure a precisão de ponto flutuante para DOUBLE
 
-	* Desmarque a opção *Wrapper options*
-	* Desmarque a opção *Environment*
-	* Desmarque a opção *Make library units*
-	* Desmarque a opção *Packages*
-	* Desmarque a opção *Enable thread safe code* (o Engine utiliza locks próprios para 
-    sincronizar o uso das classes da JCL)
-	* Configure a precisão de ponto flutuante para DOUBLE
-
-2. Copie os diretórios abaixo para o diretório jcl do repositório: 
-
-	* jcl\source\common
-	* jcl\source\include
-	* jcl\source\vcl
-	* jcl\source\windows
+2. Copie os diretórios abaixo para o diretório jcl do repositório:
+    - jcl\source\common
+    - jcl\source\include
+    - jcl\source\vcl
+    - jcl\source\windows
 
 3. Remova os diretórios:
-
-	* jcl\windows\obj (o objetivo é garantir que a ZLIB não será embarcada estaticamente)
-	* jcl\include\jedi\.git
+    - jcl\windows\obj (o objetivo é garantir que a ZLIB não será embarcada estaticamente)
+    - jcl\include\jedi\.git
 
 4. Remova os arquivos:
-    * jcl\vcl\JclGraphics.pas
-    * jcl\vcl\JclGraphUtils.pas
+    - jcl\vcl\JclGraphics.pas
+    - jcl\vcl\JclGraphUtils.pas
 
 5. Revisar cada arquivo alterado para não desfazer modificações necessárias para o suporte ao FPC
-ou Linux. Ter atenção especial com os seguintes arquivos:
-   
-   * JclAbstractContainers: seUTF8 => TJclAnsiStrEncoding.seUTF8.
-   * JclAnsiStrings: inclusão da FpLibcCompatibility.
-   * JclDateTime: implementação de funções de conversão de data para o Linux.
-   * JclFileUtils: IFDEFs para APIs do Windows. Foram muitas alterações. É mais produtivo aplicar
-   apenas as alterações desse arquivo no histórico do projeto Jcl.
-   * JclSynch, JclLogic e JclMath: todas as funções com assembler e IFDEFs para códigos que
-   utilizam APIs do Windows. Por segurança, deve-se evitar sincronizar alterações nesses units.
-   * JclStreams e JclStringConversions: IFDEFs para classes que utilizam APIs do Windows. 
-   Compatibilidade das classes TJclHandleStream e TJclFileStream com FPC/Linux.
-   * JclStringLists: TJclInterfacedStringList e TJclStringList compatíveis com FPC.
-   * JclStrings: IFDEF em CharType para Windows.
-   * jcl.inc: desativar LOCALSYMBOLS, DEFINITIONINFO, REFERENCEINFO e SUPPORTS\_GENERICS para o FPC.
-   * JclUnicode: IFDEF em TSearchEngine para o Windows.
-   * JclSysInfo e JclSysUtils: diversas APIs revistas para compatibilizar com o FPC.
+   ou Linux. Ter atenção especial com os seguintes arquivos:
+    - JclAbstractContainers: seUTF8 => TJclAnsiStrEncoding.seUTF8.
+    - JclAnsiStrings: inclusão da FpLibcCompatibility.
+    - JclDateTime: implementação de funções de conversão de data para o Linux.
+    - JclFileUtils: IFDEFs para APIs do Windows. Foram muitas alterações. É mais produtivo aplicar
+      apenas as alterações desse arquivo no histórico do projeto Jcl.
+    - JclSynch, JclLogic e JclMath: todas as funções com assembler e IFDEFs para códigos que
+      utilizam APIs do Windows. Por segurança, deve-se evitar sincronizar alterações nesses units.
+    - JclStreams e JclStringConversions: IFDEFs para classes que utilizam APIs do Windows.
+      Compatibilidade das classes TJclHandleStream e TJclFileStream com FPC/Linux.
+    - JclStringLists: TJclInterfacedStringList e TJclStringList compatíveis com FPC.
+    - JclStrings: IFDEF em CharType para Windows.
+    - jcl.inc: desativar LOCALSYMBOLS, DEFINITIONINFO, REFERENCEINFO e SUPPORTS_GENERICS para o FPC.
+    - JclUnicode: IFDEF em TSearchEngine para o Windows.
+    - JclSysInfo e JclSysUtils: diversas APIs revistas para compatibilizar com o FPC.

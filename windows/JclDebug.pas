@@ -2586,7 +2586,13 @@ var
     I: Integer;
   begin
     for I := Low(ImageSectionHeaders) to High(ImageSectionHeaders) do
-      ImageSectionHeaders[I].PointerToRawData := ImageSectionHeaders[I].PointerToRawData + AOffset;
+    begin
+      // Sections with no raw data on disk (e.g. .bss, .tls) have PointerToRawData = 0
+      // and must keep it. Only shift sections that actually have raw data, otherwise
+      // they end up with a bogus non-zero file offset.
+      if ImageSectionHeaders[I].PointerToRawData <> 0 then
+        ImageSectionHeaders[I].PointerToRawData := ImageSectionHeaders[I].PointerToRawData + AOffset;
+    end;
   end;
 
   procedure FillZeros(AStream: TStream; ACount: Integer);
@@ -2652,14 +2658,21 @@ var
       raise EJclPeImageError.CreateRes(@SWriteError);
   end;
 
-  procedure CheckHeadersSpace(AStream: TStream);
+  procedure AdjustHeadersSpace(AStream: TStream; AFileAlignment: DWORD; var ASizeOfHeaders: DWORD);
   begin
     if ImageSectionHeaders[0].PointerToRawData < ImageSectionHeadersPosition +
        (SizeOf(TImageSectionHeader) * (Length(ImageSectionHeaders) + 1)) then
     begin
-      MoveData(AStream, ImageSectionHeaders[0].PointerToRawData, NtHeaders64.OptionalHeader.FileAlignment);
-      MovePointerToRawData(NtHeaders64.OptionalHeader.FileAlignment);
-      WriteSectionHeaders(AStream, ImageSectionHeadersPosition);
+      MoveData(AStream, ImageSectionHeaders[0].PointerToRawData, AFileAlignment);
+      MovePointerToRawData(AFileAlignment);
+
+      // The header area was grown by one FileAlignment block to make room for the new
+      // section header. SizeOfHeaders must grow with it; otherwise the section table
+      // extends past SizeOfHeaders and the first section's raw data no longer starts at
+      // SizeOfHeaders. The Windows loader tolerates that, but strict PE validators
+      // (e.g. signtool) reject the image with ERROR_BAD_EXE_FORMAT (0x800700C1).
+      Inc(ASizeOfHeaders, AFileAlignment);
+      WriteSectionHeaders(AStream, ImageSectionHeadersPosition);      WriteSectionHeaders(AStream, ImageSectionHeadersPosition);
     end;
   end;
 
@@ -2714,6 +2727,9 @@ begin
               Exit;
             end;
 
+            // Make room for an additional section header (and grow SizeOfHeaders) if needed
+            AdjustHeadersSpace(ImageStream, NtHeaders32.OptionalHeader.FileAlignment, NtHeaders32.OptionalHeader.SizeOfHeaders);
+
             JclDebugSectionPosition := ImageSectionHeadersPosition + (SizeOf(ImageSectionHeaders[0]) * Length(ImageSectionHeaders));
             LastSection := @ImageSectionHeaders[High(ImageSectionHeaders)];
 
@@ -2756,8 +2772,8 @@ begin
               Exit;
             end;
 
-            // Check if there is enough space for additional header
-            CheckHeadersSpace(ImageStream);
+            // Make room for an additional section header (and grow SizeOfHeaders) if needed
+            AdjustHeadersSpace(ImageStream, NtHeaders64.OptionalHeader.FileAlignment, NtHeaders64.OptionalHeader.SizeOfHeaders);
 
             JclDebugSectionPosition := ImageSectionHeadersPosition + (SizeOf(ImageSectionHeaders[0]) * Length(ImageSectionHeaders));
             LastSection := @ImageSectionHeaders[High(ImageSectionHeaders)];
@@ -2812,6 +2828,13 @@ begin
   finally
     ImageStream.Free;
   end;
+
+  // Inserting the section invalidated the original PE checksum. Recompute it now that
+  // the exclusive stream is closed (MapAndLoad needs its own handle). Signing tools
+  // rewrite the checksum themselves, but a correct value is expected by some loaders
+  // and validators.
+  if Result then
+    PeUpdateCheckSum(ExecutableFileName);
 end;
 
 //=== { TJclBinDebugGenerator } ==============================================
@@ -5419,9 +5442,6 @@ var
   TBI: THREAD_BASIC_INFORMATION;
   ReturnedLength: ULONG;
 begin
-  {$IFNDEF COMPILER37_UP}
-  Result := 0;
-  {$ENDIF ~COMPILER37_UP}
   ReturnedLength := 0;
   if (NtQueryInformationThread(ThreadHandle, ThreadBasicInformation, @TBI, SizeOf(TBI), @ReturnedLength) < $80000000) and
      (ReturnedLength = SizeOf(TBI)) then
@@ -6450,10 +6470,12 @@ begin
           // 7 bytes, "CALL NEAR [EAX+EAX+$1234567]" (FF /2) where Reg = 010, Mod = 10 and RM = 100
           CallInstructionSize := 7
         else
+{$IFNDEF CPUX64} //The 9A cp call opcode is not valid in 64-bit mode
         if ((CodeDWORD8 and $0000FF00) = $00009A00) then
           // 7 bytes, "CALL FAR $1234:12345678" (9A ptr16:32)
           CallInstructionSize := 7
         else
+{$ENDIF}
           Result := False;
         // Because we're not doing a complete disassembly, we will potentially report
         // false positives. If there is odd code that uses the CALL 16:32 format, we
