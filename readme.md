@@ -1,7 +1,7 @@
 # JCL
 
-**Versão atual:** commit 7332634269062e46e2f6cf0f4b2a712bf8dc39e6 do branch **master** de
-03/07/2026.
+**Versão atual:** commit baa221eaf0b2d02f460b7ab31ee4695ec4fb517c do branch **master** de
+02/09/2026.
 
 Observar que a JCL em si não é compatível com o FreePascal e no passado foi criado este fork
 que foi sendo gradualmente modificado para tornar compatível. Essa abordagem tornou possível a
